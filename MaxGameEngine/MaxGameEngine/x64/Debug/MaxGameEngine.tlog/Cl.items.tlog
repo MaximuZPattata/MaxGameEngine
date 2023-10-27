@@ -1,0 +1,12 @@
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cControlGameEngine.cpp;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\cControlGameEngine.obj
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cLightHelper.cpp;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\cLightHelper.obj
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cLightManager.cpp;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\cLightManager.obj
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cMesh.cpp;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\cMesh.obj
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cPhysics.cpp;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\cPhysics.obj
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cPhysics_Update.cpp;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\cPhysics_Update.obj
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cShader.cpp;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\cShader.obj
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cShaderManager.cpp;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\cShaderManager.obj
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cVAOManager.cpp;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\cVAOManager.obj
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\glad.c;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\glad.obj
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\sModelDrawInfo.cpp;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\sModelDrawInfo.obj
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\sPhysicsProperties.cpp;C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\x64\Debug\sPhysicsProperties.obj
