@@ -186,7 +186,7 @@ int cControlGameEngine::InitializeGameEngine()
 
     gMeshManager = new cVAOManager();
 
-    gMeshManager->setBasePath("assets/models");
+    gMeshManager->setBasePath("Assets/Models");
 
     gPhysics = new cPhysics();
 
