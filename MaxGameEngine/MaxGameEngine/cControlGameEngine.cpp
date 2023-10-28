@@ -15,6 +15,8 @@
 #include <vector>
 #include <sstream>
 
+//-------------------------------------------------Private Functions-----------------------------------------------------------------------
+
 cMesh* cControlGameEngine::g_pFindMeshByFriendlyName(std::string friendlyNameToFind)
 {
     for (unsigned int index = 0; index != g_vec_pMeshesToDraw.size(); index++)
@@ -24,6 +26,9 @@ cMesh* cControlGameEngine::g_pFindMeshByFriendlyName(std::string friendlyNameToF
             return g_vec_pMeshesToDraw[index];
         }
     }
+
+    std::cout << "Cannot find mesh model for the name provided : " << friendlyNameToFind << std::endl;
+
     return NULL;
 }
 
@@ -146,19 +151,147 @@ void cControlGameEngine::MoveCameraPosition(float translate_x, float translate_y
     g_cameraEye = glm::vec3(translate_x, translate_y, translate_z);
 }
 
+void cControlGameEngine::MoveCameraTarget(float translate_x, float translate_y, float translate_z)
+{
+    g_cameraTarget = glm::vec3(translate_x, translate_y, translate_z);
+}
+
 glm::vec3 cControlGameEngine::GetCurrentCameraPosition()
 {
     return g_cameraEye;
 }
 
-void cControlGameEngine::LoadModelsInto3DSpace(std::string filePath,
-    std::string modelName, float initial_x, float initial_y, float initial_z)
+glm::vec3 cControlGameEngine::GetCurrentCameraTarget()
+{
+    return g_cameraTarget;
+}
+
+void cControlGameEngine::ScaleModel(std::string modelModel, float scale_value)
+{
+    cMesh* meshToBeScaled = g_pFindMeshByFriendlyName(modelModel);
+
+    meshToBeScaled->setUniformDrawScale(scale_value);
+}
+
+void cControlGameEngine::MoveModel(std::string modelModel, float translate_x, float translate_y, float translate_z)
+{
+    cMesh* meshToBeTranslated = g_pFindMeshByFriendlyName(modelModel);
+
+    const glm::vec3& position = glm::vec3(translate_x, translate_y, translate_z);
+
+    meshToBeTranslated->setDrawPosition(position);
+}
+
+glm::vec3 cControlGameEngine::GetModelPosition(std::string modelModel)
+{
+    cMesh* meshPosition = g_pFindMeshByFriendlyName(modelModel);
+
+    return meshPosition->getDrawPosition();
+}
+
+void cControlGameEngine::RotateMeshModel(std::string modelModel, float scalar, float rotate_x, float rotate_y, float rotate_z)
+{
+    cMesh* meshToBeRotated = g_pFindMeshByFriendlyName(modelModel);
+
+    glm::vec3 rotation = glm::vec3(rotate_x, rotate_y, rotate_z);
+
+    //meshToBeRotated->setRotationFromEuler(rotation);
+}
+
+void cControlGameEngine::CreateLight(int lightId)
+{
+    if (lightId > 15)
+    {
+        std::cout << "Light Id is more than 15 ! Cannot create light !" << std::endl;
+        return;
+    }
+    std::cout << "Light : " << lightId << " Created !" << std::endl;
+
+    gTheLights->SetUniformLocations(shaderProgramID, lightId);
+
+    gTheLights->theLights[lightId].param2.x = 1.0f; // Turn on
+
+    gTheLights->theLights[lightId].param1.x = 2.0f;   // 0 = point light , 1 = spot light , 2 = directional light
+
+    gTheLights->theLights[lightId].param1.y = 50.0f; // inner angle
+
+    gTheLights->theLights[lightId].param1.z = 50.0f; // outer angle
+
+    gTheLights->theLights[lightId].position.x = 0.0f;
+
+    gTheLights->theLights[lightId].position.y = 0.0f;
+
+    gTheLights->theLights[lightId].position.z = 0.0f;
+
+    gTheLights->theLights[lightId].direction = glm::vec4(0.0f, -1.0f, 0.0f, 1.0f);
+
+    gTheLights->theLights[lightId].atten.x = 0.0f;        // Constant attenuation
+
+    gTheLights->theLights[lightId].atten.y = 0.1f;        // Linear attenuation
+
+    gTheLights->theLights[lightId].atten.z = 0.0f;        // Quadratic attenuation
+}
+
+void cControlGameEngine::TurnOffLight(int lightId, bool turnOff)
+{
+    if (turnOff)
+        gTheLights->theLights[lightId].param2.x = 0.0f;
+    else
+        gTheLights->theLights[lightId].param2.x = 1.0f;
+}
+
+void cControlGameEngine::PositionLight(int lightId, float translate_x, float translate_y, float translate_z)
+{
+    gTheLights->theLights[lightId].position.x = translate_x;
+
+    gTheLights->theLights[lightId].position.y = translate_y;
+
+    gTheLights->theLights[lightId].position.z = translate_z;
+}
+
+void cControlGameEngine::ChangeLightIntensity(int lightId, float linearAttentuation, float quadraticAttentuation)
+{
+    gTheLights->theLights[lightId].atten.y = linearAttentuation;
+
+    gTheLights->theLights[lightId].atten.z = quadraticAttentuation;
+}
+
+void cControlGameEngine::ChangeLightType(int lightId, float lightType)
+{
+    gTheLights->theLights[lightId].param1.x = lightType;
+}
+
+void cControlGameEngine::ChangeLightAngle(int lightId, float innerAngle, float outerAngle)
+{
+    gTheLights->theLights[lightId].param1.y = innerAngle; // inner angle
+
+    gTheLights->theLights[lightId].param1.z = outerAngle; // outer angle
+}
+
+void cControlGameEngine::ChangeLightDirection(int lightId, float direction_x, float direction_y, float direction_z)
+{
+    gTheLights->theLights[lightId].direction = glm::vec4(direction_x, direction_y, direction_z, 1.0f);
+
+}
+
+void cControlGameEngine::ChangeLightColour(int lightId, float color_r, float color_g, float color_b)
+{
+    gTheLights->theLights[lightId].diffuse = glm::vec4(color_r, color_g, color_b, 1.0f);
+}
+
+void cControlGameEngine::LoadModelsInto3DSpace(std::string filePath, std::string modelName, float initial_x, float initial_y, float initial_z)
 {
     sModelDrawInfo* newModel = new sModelDrawInfo;
 
     cMesh* newMesh = new cMesh();
 
-    gMeshManager->LoadModelIntoVAO(filePath, *newModel, shaderProgramID);
+    bool result = gMeshManager->LoadModelIntoVAO(filePath, *newModel, shaderProgramID);
+
+    if (!result)
+    {
+        std::cout << "Cannot load model - " << modelName << std::endl;
+        return;
+    }
 
     newMeshAdd.push_back(newModel);
 
@@ -197,36 +330,13 @@ int cControlGameEngine::InitializeGameEngine()
 
     gTheLights = new cLightManager();
 
-    gTheLights->SetUniformLocations(shaderProgramID);
-
-    gTheLights->theLights[0].param2.x = 1.0f;
-
-    gTheLights->theLights[0].param1.x = 2.0f;   // 0 = point light , 1 = spot light , 2 = directional light
-
-    gTheLights->theLights[0].param1.y = 15.0f;
-
-    gTheLights->theLights[0].param1.z = 25.0f;
-
-    gTheLights->theLights[0].position.x = -46.0f;
-
-    gTheLights->theLights[0].position.y = 23.0f;
-
-    gTheLights->theLights[0].position.z = -26.0f;
-
-    gTheLights->theLights[0].direction = glm::vec4(0.0f, -1.0f, 0.0f, 1.0f);  // x = lightType, y = inner angle, z = outer angle, w = TBD
-
-    gTheLights->theLights[0].atten.x = 0.0f;        // Constant attenuation
-
-    gTheLights->theLights[0].atten.y = 0.01f;        // Linear attenuation
-
-    gTheLights->theLights[0].atten.z = 0.01f;        // Quadratic attenuation
+    // CreateLight(0);
 
     return 0;
 }
 
 int cControlGameEngine::RunGameEngine(GLFWwindow* window)
 {
-
 
     while (!glfwWindowShouldClose(window))
     {
@@ -285,19 +395,14 @@ int cControlGameEngine::RunGameEngine(GLFWwindow* window)
 
         std::stringstream ssTitle;
 
-        ssTitle << "Camera (x,y,z): "
+        ssTitle << "Camera Eye(x,y,z): "
             << g_cameraEye.x << ", "
             << g_cameraEye.y << ", "
-            << g_cameraEye.z << ") "
-            << "Light[" << gSelectedLight << "]: "
-            << gTheLights->theLights[gSelectedLight].position.x << ", "
-            << gTheLights->theLights[gSelectedLight].position.y << ", "
-            << gTheLights->theLights[gSelectedLight].position.z << "  "
-            << "const:" << gTheLights->theLights[gSelectedLight].atten.x << " "
-            << "linear:" << gTheLights->theLights[gSelectedLight].atten.y << " "
-            << "quad:" << gTheLights->theLights[gSelectedLight].atten.z << " "
-            << "inner: " << gTheLights->theLights[gSelectedLight].param1.y << " "
-            << "outer: " << gTheLights->theLights[gSelectedLight].param1.z << " ";
+            << g_cameraEye.z << ") | "
+            << "Camera Target(x,y,z): "
+            << g_cameraTarget.x << ", "
+            << g_cameraTarget.y << ", "
+            << g_cameraTarget.z << ")";
 
         std::string theTitle = ssTitle.str();
 

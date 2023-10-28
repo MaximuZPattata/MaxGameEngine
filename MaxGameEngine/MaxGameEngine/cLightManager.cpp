@@ -46,22 +46,48 @@ void cLight::TurnOff(void)
 	return;
 }
 
-
-void cLightManager::SetUniformLocations(GLuint shaderID)
+void cLightManager::SetUniformLocations(GLuint shaderID, int lightId)
 {
-	this->theLights[0].position_UL = glGetUniformLocation(shaderID, "theLights[0].position");
+	std::string lightAttributes = "theLights[" + std::to_string(lightId) + "].position";
+	const GLchar* glLightAttributes = lightAttributes.c_str();
+
+	this->theLights[lightId].position_UL = glGetUniformLocation(shaderID, glLightAttributes);
 	//        vec4 diffuse;	// Colour of the light (used for diffuse)
-	this->theLights[0].diffuse_UL = glGetUniformLocation(shaderID, "theLights[0].diffuse");
+
+	lightAttributes = "theLights[" + std::to_string(lightId) + "].diffuse";
+	glLightAttributes = lightAttributes.c_str();
+
+	this->theLights[lightId].diffuse_UL = glGetUniformLocation(shaderID, glLightAttributes);
 	//        vec4 specular;	// rgb = highlight colour, w = power
-	this->theLights[0].specular_UL = glGetUniformLocation(shaderID, "theLights[0].specular");
+
+	lightAttributes = "theLights[" + std::to_string(lightId) + "].specular";
+	glLightAttributes = lightAttributes.c_str();
+
+	this->theLights[lightId].specular_UL = glGetUniformLocation(shaderID, glLightAttributes);
 	//        vec4 atten;		// x = constant, y = linear, z = quadratic, w = DistanceCutOff
-	this->theLights[0].atten_UL = glGetUniformLocation(shaderID, "theLights[0].atten");
+
+	lightAttributes = "theLights[" + std::to_string(lightId) + "].atten";
+	glLightAttributes = lightAttributes.c_str();
+
+	this->theLights[lightId].atten_UL = glGetUniformLocation(shaderID, glLightAttributes);
 	//        vec4 direction;	// Spot, directional lights
-	this->theLights[0].direction_UL = glGetUniformLocation(shaderID, "theLights[0].direction");
+
+	lightAttributes = "theLights[" + std::to_string(lightId) + "].direction";
+	glLightAttributes = lightAttributes.c_str();
+
+	this->theLights[lightId].direction_UL = glGetUniformLocation(shaderID, glLightAttributes);
 	//        vec4 param1;	// x = lightType, y = inner angle, z = outer angle, w = TBD
-	this->theLights[0].param1_UL = glGetUniformLocation(shaderID, "theLights[0].param1");
+
+	lightAttributes = "theLights[" + std::to_string(lightId) + "].param1";
+	glLightAttributes = lightAttributes.c_str();
+
+	this->theLights[lightId].param1_UL = glGetUniformLocation(shaderID, glLightAttributes);
 	//        vec4 param2;	// x = 0 for off, 1 for on
-	this->theLights[0].param2_UL = glGetUniformLocation(shaderID, "theLights[0].param2");
+
+	lightAttributes = "theLights[" + std::to_string(lightId) + "].param2";
+	glLightAttributes = lightAttributes.c_str();
+
+	this->theLights[lightId].param2_UL = glGetUniformLocation(shaderID, glLightAttributes);
 
 	return;
 }
@@ -111,7 +137,7 @@ void cLightManager::UpdateUniformValues(GLuint shaderID)
 			theLights[index].param2.y,
 			theLights[index].param2.z,
 			theLights[index].param2.w);
-	}// for ( unsigned int index...
+	}
 
 
 	return;

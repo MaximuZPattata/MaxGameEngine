@@ -40,13 +40,12 @@ public:
     cLightManager();
 
     // This is called once
-    void SetUniformLocations(GLuint shaderID);
+    void SetUniformLocations(GLuint shaderID, int lightId);
 
     // This is called every frame
     void UpdateUniformValues(GLuint shaderID);
 
-    static const unsigned int NUMBER_OF_LIGHTS_IM_USING = 10;
+    static const unsigned int NUMBER_OF_LIGHTS_IM_USING = 15;
     cLight theLights[NUMBER_OF_LIGHTS_IM_USING];
-
 };
 
