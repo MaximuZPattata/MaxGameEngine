@@ -10,7 +10,7 @@ class cVAOManager
 {
 public:
 
-	bool LoadModelIntoVAO(std::string fileName,
+	bool LoadModelIntoVAO(std::string friendlyName, std::string fileName,
 		sModelDrawInfo& drawInfo,
 		unsigned int shaderProgramID,
 		bool bIsDynamicBuffer = false);

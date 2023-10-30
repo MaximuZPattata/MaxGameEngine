@@ -15,7 +15,9 @@ struct sModelDrawInfo
 {
 	sModelDrawInfo();
 
-	std::string meshName;
+	std::string meshFileName;
+
+	std::string friendlyName;
 
 	unsigned int VAO_ID;
 

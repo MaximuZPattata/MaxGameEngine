@@ -15,9 +15,11 @@ void cVAOManager::setBasePath(std::string basePathWithoutSlash)
     return;
 }
 
-bool cVAOManager::LoadModelIntoVAO(std::string fileName, sModelDrawInfo& drawInfo, unsigned int shaderProgramID, bool bIsDynamicBuffer)
+bool cVAOManager::LoadModelIntoVAO(std::string friendlyName, std::string fileName, sModelDrawInfo& drawInfo, unsigned int shaderProgramID, bool bIsDynamicBuffer)
 {
-    drawInfo.meshName = fileName;
+    drawInfo.meshFileName = fileName;
+
+    drawInfo.friendlyName = friendlyName;
 
     std::string fileAndPath = this->m_basePathWithoutSlash + "/" + fileName;
 
@@ -70,7 +72,7 @@ bool cVAOManager::LoadModelIntoVAO(std::string fileName, sModelDrawInfo& drawInf
     glDisableVertexAttribArray(vcol_location);
     glDisableVertexAttribArray(vNormal_location);
 
-    this->m_map_ModelName_to_VAOID[drawInfo.meshName] = drawInfo;
+    this->m_map_ModelName_to_VAOID[drawInfo.meshFileName] = drawInfo;
 
     return true;
 }

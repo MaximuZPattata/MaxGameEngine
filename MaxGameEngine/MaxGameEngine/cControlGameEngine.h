@@ -1,10 +1,12 @@
 #pragma once
 #include "cMesh.h"
 #include "cPhysics.h"
+//#include "sPhysicsProperties.h"
 #include "cLightManager.h"
 #include "cLightHelper.h"
 #include "cVAOManager.h"
 #include "cShaderManager.h"
+
 
 class cControlGameEngine
 {
@@ -26,6 +28,8 @@ private:
 
     cLightManager* gTheLights = NULL;
 
+    std::vector < sPhysicsProperties* > gModelPhysicalProps;
+
     std::vector< cMesh* > g_vec_pMeshesToDraw;
 
     std::vector < sModelDrawInfo* > newMeshAdd;
@@ -38,9 +42,15 @@ private:
 
     cMesh* g_pFindMeshByFriendlyName(std::string friendlyNameToFind);
 
+    sModelDrawInfo* g_pFindModelInfoByFriendlyName(std::string friendlyNameToFind);
+
+    sPhysicsProperties* FindPhysicalModelByName(std::string modelName);
+
     int InitializeShader();
 
 public:
+
+    //-------------------Camera Controls---------------------------------------------------
 
     void MoveCameraPosition(float translate_x, float translate_y, float translate_z);
 
@@ -50,6 +60,8 @@ public:
 
     glm::vec3 GetCurrentCameraTarget();
 
+    //-------------------Mesh Controls---------------------------------------------------
+
     void ScaleModel(std::string modelModel, float scale_value);
 
     void MoveModel(std::string modelModel, float translate_x, float translate_y, float translate_z);
@@ -58,7 +70,15 @@ public:
 
     void RotateMeshModel(std::string modelModel, float scalar, float rotate_x, float rotate_y, float rotate_z);
 
-    void CreateLight(int lightId);
+    void TurnVisibilityOn(std::string modelModel);
+
+    void TurnWireframeModeOn(std::string modelModel);
+
+    void TurnMeshLightsOn(std::string modelModel);
+
+    //-------------------Light Controls---------------------------------------------------
+
+    void CreateLight(int lightId, float initial_x, float initial_y, float initial_z);
 
     void TurnOffLight(int lightId, bool turnOff);
 
@@ -73,6 +93,23 @@ public:
     void ChangeLightDirection(int lightId, float direction_x, float direction_y, float direction_z);
 
     void ChangeLightColour(int lightId, float color_r, float color_g, float color_b);
+
+    //------------------Physics Controls---------------------------------------------------
+
+    void DoPhysics(std::string sphereModelName, std::string groundModelName, double deltaTime);
+
+    void ChangeModelPhysicsPosition(std::string modelName, float newPositionX, float newPositionY, float newPositionZ);
+
+    void AddPhysicsToMesh(std::string modelName);
+
+    void ChangeModelPhysicsVelocity(std::string modelName, glm::vec3 velocityChange);
+
+    void ChangeModelPhysicsAcceleration(std::string modelName, glm::vec3 accelerationChange);
+
+    bool CheckForCollision(std::string model_1, std::string model_2);
+
+
+    //-------------------Engine Controls---------------------------------------------------
 
     void LoadModelsInto3DSpace(std::string filePath, std::string modelName, float initial_x, float initial_y, float initial_z);
 
