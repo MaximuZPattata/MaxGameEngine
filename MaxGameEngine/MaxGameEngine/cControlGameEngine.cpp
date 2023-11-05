@@ -47,7 +47,6 @@ sModelDrawInfo* cControlGameEngine::g_pFindModelInfoByFriendlyName(std::string f
     return NULL;
 }
 
-
 sPhysicsProperties* cControlGameEngine::FindPhysicalModelByName(std::string modelName)
 {
     for (unsigned int index = 0; index != gModelPhysicalProps.size(); index++)
@@ -177,7 +176,6 @@ int cControlGameEngine::InitializeShader()
 
 //---------------------------------------------------Public Functions-----------------------------------------------------------------------
 
-
 //--------------------------------------Camera Controls----------------------------------------------------------------
 
 void cControlGameEngine::MoveCameraPosition(float translate_x, float translate_y, float translate_z)
@@ -201,6 +199,23 @@ glm::vec3 cControlGameEngine::GetCurrentCameraTarget()
 }
 
 //--------------------------------------Mesh Controls-----------------------------------------------------------------
+
+void cControlGameEngine::ChangeColor(std::string modelName, float r, float g, float b)
+{
+    cMesh* meshToBeScaled = g_pFindMeshByFriendlyName(modelName);
+
+    meshToBeScaled->wholeObjectDebugColourRGBA = glm::vec4(r, g, b, 1.0f);
+}
+
+void cControlGameEngine::UseDifferentColors(std::string modelName, bool useColor)
+{
+    cMesh* meshToBeScaled = g_pFindMeshByFriendlyName(modelName);
+
+    if (useColor)
+        meshToBeScaled->bUseDebugColours = true;
+    else
+        meshToBeScaled->bUseDebugColours = false;
+}
 
 void cControlGameEngine::ScaleModel(std::string modelName, float scale_value)
 {
@@ -262,6 +277,24 @@ void cControlGameEngine::TurnMeshLightsOn(std::string modelName)
         meshLights->bDoNotLight = false;
     else
         meshLights->bDoNotLight = true;
+}
+
+void cControlGameEngine::DeleteMesh(std::string modelName)
+{
+    cMesh* meshModel = g_pFindMeshByFriendlyName(modelName);
+
+    sPhysicsProperties* physicalModel = FindPhysicalModelByName(modelName);
+
+    sModelDrawInfo* modelInfo = g_pFindModelInfoByFriendlyName(modelName);
+
+    if (meshModel != NULL)
+        g_vec_pMeshesToDraw.erase(std::remove(g_vec_pMeshesToDraw.begin(), g_vec_pMeshesToDraw.end(), meshModel), g_vec_pMeshesToDraw.end());
+
+    if (physicalModel != NULL)
+        gModelPhysicalProps.erase(std::remove(gModelPhysicalProps.begin(), gModelPhysicalProps.end(), physicalModel), gModelPhysicalProps.end());
+
+    if (modelInfo != NULL)
+        newMeshAdd.erase(std::remove(newMeshAdd.begin(), newMeshAdd.end(), modelInfo), newMeshAdd.end());
 }
 
 //--------------------------------------Lights Controls-----------------------------------------------------------------
@@ -349,37 +382,94 @@ void cControlGameEngine::ChangeLightColour(int lightId, float color_r, float col
 
 //--------------------------------------Physics Controls---------------------------------------------------------------
 
-void cControlGameEngine::DoPhysics(std::string sphereModelName, std::string groundModelName, double deltaTime)
+void  cControlGameEngine::CheckForPhysicalModel(double deltaTime, std::string modelName)
 {
-    sPhysicsProperties* spherePhysicalModel = FindPhysicalModelByName(sphereModelName);
+    for (int physicalModelCount = 0; physicalModelCount < gModelPhysicalProps.size(); physicalModelCount++)
+    {
+        sPhysicsProperties* spherePhysicalModel = FindPhysicalModelByName(gModelPhysicalProps[physicalModelCount]->modelName);
 
-    glm::vec3 velocityChange = spherePhysicalModel->acceleration * (float)deltaTime;
-
-    spherePhysicalModel->velocity += velocityChange;
-
-    glm::vec3 positionChange = spherePhysicalModel->velocity * (float)deltaTime;
-
-    spherePhysicalModel->position.x += positionChange.x;
-    spherePhysicalModel->position.y += positionChange.y;
-    spherePhysicalModel->position.z += positionChange.z;
-
-    g_vec_pMeshesToDraw[0]->setDrawPosition(spherePhysicalModel->position);
-
-    glm::vec3 groundPos = g_vec_pMeshesToDraw[1]->getDrawPosition();
-
-    /* if (physicalModelFound->position.y - 5 <= groundPos.y)
-         physicalModelFound->velocity.y = fabs(physicalModelFound->velocity.y);*/
-
-    cMesh* groundMesh = g_pFindMeshByFriendlyName(groundModelName);
-
-    sModelDrawInfo* modelInfo = g_pFindModelInfoByFriendlyName(groundModelName);
-
-    gPhysics->CheckForCollision(gMeshManager, modelInfo->meshFileName, modelInfo, spherePhysicalModel->position, 5.0f, groundMesh, spherePhysicalModel);
+        if (spherePhysicalModel != NULL)
+        {
+            DoPhysics(spherePhysicalModel, modelName, deltaTime);
+        }
+    }
 }
 
-bool cControlGameEngine::CheckForCollision(std::string model_1, std::string model_2)
+void cControlGameEngine::DoPhysics(sPhysicsProperties* physicsModel, std::string Model2, double deltaTime)
 {
-    return true;
+    //---------------------Calculate acceleration & velocity-------------------------------
+
+    glm::vec3 velocityChange = physicsModel->acceleration * (float)deltaTime;
+
+    physicsModel->velocity += velocityChange;
+
+    glm::vec3 positionChange = physicsModel->velocity * (float)deltaTime;
+
+    physicsModel->position.x += positionChange.x;
+    physicsModel->position.y += positionChange.y;
+    physicsModel->position.z += positionChange.z;
+
+    //---------------------Set sphere's position based on new velocity--------------------
+
+    cMesh* sphereMesh = g_pFindMeshByFriendlyName(physicsModel->modelName);
+
+    sphereMesh->setDrawPosition(physicsModel->position);
+
+    //---------------------Get ship's position--------------------------------------------
+
+    cMesh* model2Mesh = g_pFindMeshByFriendlyName(Model2);
+
+    model2Mesh->getDrawPosition();
+
+    sModelDrawInfo* modelInfo = g_pFindModelInfoByFriendlyName(Model2);
+
+    //----------------------Check for Collision--------------------------------------------
+
+    bool result = false;
+
+    if (physicsModel->position.x < model2Mesh->drawPosition.x + 70.0f && physicsModel->position.x > model2Mesh->drawPosition.x - 70.0f &&
+        physicsModel->position.y < model2Mesh->drawPosition.y + 70.0f && physicsModel->position.y > model2Mesh->drawPosition.y - 70.0f &&
+        physicsModel->position.z < model2Mesh->drawPosition.z + 200.0f && physicsModel->position.z > model2Mesh->drawPosition.z - 200.0f)
+    {
+        result = gPhysics->CheckForCollision(gMeshManager, modelInfo->meshFileName, modelInfo, physicsModel->position, physicsModel->radius, model2Mesh, physicsModel);
+    }
+
+    if (result == true)
+    {
+        CollisionResponse(physicsModel);
+    }
+}
+
+void cControlGameEngine::CollisionResponse(sPhysicsProperties* physicsModel)
+{
+    glm::vec3 sphereDirection = physicsModel->velocity;
+    sphereDirection = glm::normalize(sphereDirection);
+
+    glm::vec3 edgeA = physicsModel->closestTriangleVertices[1] - physicsModel->closestTriangleVertices[0];
+    glm::vec3 edgeB = physicsModel->closestTriangleVertices[2] - physicsModel->closestTriangleVertices[0];
+
+    glm::vec3 triNormal = glm::normalize(glm::cross(edgeA, edgeB));
+
+    glm::vec3 reflectionVector = glm::reflect(sphereDirection, triNormal);
+
+    float sphereSpeed = glm::length(physicsModel->velocity);
+
+    glm::vec3 newVelocity = reflectionVector * sphereSpeed;
+
+    physicsModel->velocity = newVelocity;
+
+    std::cout << "Hit!!" << std::endl;
+
+    //----------------Find Centroid of triangle-------------------------
+
+    //float triCentreX = (closestTriangleVertices[0].x + closestTriangleVertices[1].x + closestTriangleVertices[2].x) / 3;
+    //float triCentreY = (closestTriangleVertices[0].y + closestTriangleVertices[1].y + closestTriangleVertices[2].y) / 3;
+    //float triCentreZ = (closestTriangleVertices[0].z + closestTriangleVertices[1].z + closestTriangleVertices[2].z) / 3;
+
+    //spherePhysicalProps->collisionPoint.x = triCentreX;
+    //spherePhysicalProps->collisionPoint.y = triCentreY;
+    //spherePhysicalProps->collisionPoint.z = triCentreZ;
+
 }
 
 void cControlGameEngine::ChangeModelPhysicsPosition(std::string modelName, float newPositionX, float newPositionY, float newPositionZ)
@@ -391,11 +481,19 @@ void cControlGameEngine::ChangeModelPhysicsPosition(std::string modelName, float
     physicalModelFound->position.z = newPositionZ;
 }
 
-void cControlGameEngine::AddPhysicsToMesh(std::string modelName)
+void cControlGameEngine::AddPhysicsToMesh(std::string modelName, float objectRadius)
 {
     sPhysicsProperties* newPhysicsModel = new sPhysicsProperties();
 
+    cMesh* meshDetails = g_pFindMeshByFriendlyName(modelName);
+
+    glm::vec3 modelPosition = meshDetails->getDrawPosition();
+
     newPhysicsModel->modelName = modelName;
+
+    newPhysicsModel->radius = objectRadius;
+
+    newPhysicsModel->position = modelPosition;
 
     gModelPhysicalProps.push_back(newPhysicsModel);
 }
@@ -471,111 +569,77 @@ int cControlGameEngine::InitializeGameEngine()
     return 0;
 }
 
-int cControlGameEngine::RunGameEngine(GLFWwindow* window)
+void cControlGameEngine::RunGameEngine(GLFWwindow* window)
 {
+    float ratio;
+    int width, height;
 
-    glm::vec3 modelPosition = g_vec_pMeshesToDraw[0]->getDrawPosition(); //Sphere
+    glUseProgram(shaderProgramID);
 
-    ChangeModelPhysicsPosition("Sphere", modelPosition.x, modelPosition.y, modelPosition.z);
+    glfwGetFramebufferSize(window, &width, &height);
 
-    double lastTime = glfwGetTime();
+    ratio = width / (float)height;
 
-    while (!glfwWindowShouldClose(window))
+    glViewport(0, 0, width, height);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glEnable(GL_DEPTH_TEST);
+
+    glCullFace(GL_BACK);
+
+    //---------------------------Light Values Update----------------------------------------
+
+    gTheLights->UpdateUniformValues(shaderProgramID);
+
+    //---------------------------Camera Values----------------------------------------------
+
+    GLint eyeLocation_UL = glGetUniformLocation(shaderProgramID, "eyeLocation");
+    glUniform4f(eyeLocation_UL,
+        g_cameraEye.x, g_cameraEye.y, g_cameraEye.z, 1.0f);
+
+    glm::mat4 matProjection = glm::perspective(0.6f, ratio, 0.1f, 1000.0f);
+
+    glm::mat4 matView = glm::lookAt(g_cameraEye, g_cameraTarget, g_upVector);
+
+    GLint matProjection_UL = glGetUniformLocation(shaderProgramID, "matProjection");
+    glUniformMatrix4fv(matProjection_UL, 1, GL_FALSE, glm::value_ptr(matProjection));
+
+    GLint matView_UL = glGetUniformLocation(shaderProgramID, "matView");
+    glUniformMatrix4fv(matView_UL, 1, GL_FALSE, glm::value_ptr(matView));
+
+    //----------------------------Draw all the objects--------------------------------------
+
+    for (unsigned int index = 0; index != g_vec_pMeshesToDraw.size(); index++)
     {
-        float ratio;
-        int width, height;
+        cMesh* pCurrentMesh = g_vec_pMeshesToDraw[index];
 
-        glUseProgram(shaderProgramID);
-
-        glfwGetFramebufferSize(window, &width, &height);
-
-        ratio = width / (float)height;
-
-        glViewport(0, 0, width, height);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glEnable(GL_DEPTH_TEST);
-
-        glCullFace(GL_BACK);
-
-        //---------------------------Light Values Update----------------------------------------
-
-        gTheLights->UpdateUniformValues(shaderProgramID);
-
-        //---------------------------Camera Values----------------------------------------------
-
-        GLint eyeLocation_UL = glGetUniformLocation(shaderProgramID, "eyeLocation");
-        glUniform4f(eyeLocation_UL,
-            g_cameraEye.x, g_cameraEye.y, g_cameraEye.z, 1.0f);
-
-        glm::mat4 matProjection = glm::perspective(0.6f, ratio, 0.1f, 1000.0f);
-
-        glm::mat4 matView = glm::lookAt(g_cameraEye, g_cameraTarget, g_upVector);
-
-        GLint matProjection_UL = glGetUniformLocation(shaderProgramID, "matProjection");
-        glUniformMatrix4fv(matProjection_UL, 1, GL_FALSE, glm::value_ptr(matProjection));
-
-        GLint matView_UL = glGetUniformLocation(shaderProgramID, "matView");
-        glUniformMatrix4fv(matView_UL, 1, GL_FALSE, glm::value_ptr(matView));
-
-        //----------------------------Physics stuff-----------------------------------------
-
-        double currentTime = glfwGetTime();
-        double deltaTime = currentTime - lastTime;
-
-        //const double LARGEST_DELTA_TIME = 1.0f / 30.0f;
-
-        /*if (deltaTime > LARGEST_DELTA_TIME)
+        if (pCurrentMesh->bIsVisible)
         {
-            deltaTime = LARGEST_DELTA_TIME;
-        }*/
+            glm::mat4 matModel = glm::mat4(1.0f);
 
-        //        std::cout << deltaTime << std::endl;
-
-        lastTime = currentTime;
-
-        DoPhysics("Sphere", "Ground", deltaTime);
-
-        //----------------------------Draw all the objects--------------------------------------
-
-        for (unsigned int index = 0; index != g_vec_pMeshesToDraw.size(); index++)
-        {
-            cMesh* pCurrentMesh = g_vec_pMeshesToDraw[index];
-
-            if (pCurrentMesh->bIsVisible)
-            {
-                glm::mat4 matModel = glm::mat4(1.0f);
-
-                DrawObject(pCurrentMesh, matModel, shaderProgramID);
-            }
+            DrawObject(pCurrentMesh, matModel, shaderProgramID);
         }
-
-        //----------------------------Title Screen Values---------------------------------------------
-
-        std::stringstream ssTitle;
-
-        ssTitle << "Camera Eye(x,y,z): "
-            << g_cameraEye.x << ", "
-            << g_cameraEye.y << ", "
-            << g_cameraEye.z << ") | "
-            << "Camera Target(x,y,z): "
-            << g_cameraTarget.x << ", "
-            << g_cameraTarget.y << ", "
-            << g_cameraTarget.z << ")";
-
-        std::string theTitle = ssTitle.str();
-
-        glfwSwapBuffers(window);
-
-        glfwPollEvents();
-
-        glfwSetWindowTitle(window, theTitle.c_str());
     }
 
-    glfwDestroyWindow(window);
+    //----------------------------Title Screen Values---------------------------------------------
 
-    glfwTerminate();
+    std::stringstream ssTitle;
 
-    exit(EXIT_SUCCESS);
+    ssTitle << "Camera Eye(x,y,z): "
+        << g_cameraEye.x << ", "
+        << g_cameraEye.y << ", "
+        << g_cameraEye.z << ") | "
+        << "Camera Target(x,y,z): "
+        << g_cameraTarget.x << ", "
+        << g_cameraTarget.y << ", "
+        << g_cameraTarget.z << ")";
+
+    std::string theTitle = ssTitle.str();
+
+    glfwSwapBuffers(window);
+
+    glfwPollEvents();
+
+    glfwSetWindowTitle(window, theTitle.c_str());
 }

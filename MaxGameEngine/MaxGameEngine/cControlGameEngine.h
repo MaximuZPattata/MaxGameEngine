@@ -62,6 +62,10 @@ public:
 
     //-------------------Mesh Controls---------------------------------------------------
 
+    void ChangeColor(std::string modelName, float r, float g, float b);
+
+    void UseDifferentColors(std::string modelName, bool useColor);
+
     void ScaleModel(std::string modelModel, float scale_value);
 
     void MoveModel(std::string modelModel, float translate_x, float translate_y, float translate_z);
@@ -75,6 +79,8 @@ public:
     void TurnWireframeModeOn(std::string modelModel);
 
     void TurnMeshLightsOn(std::string modelModel);
+
+    void DeleteMesh(std::string modelName);
 
     //-------------------Light Controls---------------------------------------------------
 
@@ -96,18 +102,19 @@ public:
 
     //------------------Physics Controls---------------------------------------------------
 
-    void DoPhysics(std::string sphereModelName, std::string groundModelName, double deltaTime);
+    void CheckForPhysicalModel(double deltaTime, std::string modelName);
+
+    void DoPhysics(sPhysicsProperties* physicsModel, std::string Model2, double deltaTime);
 
     void ChangeModelPhysicsPosition(std::string modelName, float newPositionX, float newPositionY, float newPositionZ);
 
-    void AddPhysicsToMesh(std::string modelName);
+    void AddPhysicsToMesh(std::string modelName, float objectRadius);
 
     void ChangeModelPhysicsVelocity(std::string modelName, glm::vec3 velocityChange);
 
     void ChangeModelPhysicsAcceleration(std::string modelName, glm::vec3 accelerationChange);
 
-    bool CheckForCollision(std::string model_1, std::string model_2);
-
+    void CollisionResponse(sPhysicsProperties* physicsModel);
 
     //-------------------Engine Controls---------------------------------------------------
 
@@ -115,6 +122,6 @@ public:
 
     int InitializeGameEngine();
 
-    int RunGameEngine(GLFWwindow* window);
+    void RunGameEngine(GLFWwindow* window);
 };
 

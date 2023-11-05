@@ -1,13 +1,2 @@
 ﻿  cControlGameEngine.cpp
-  cLightHelper.cpp
-  cLightManager.cpp
-  cMesh.cpp
-  cPhysics.cpp
-  cPhysics_Update.cpp
-  cShader.cpp
-  cShaderManager.cpp
-  cVAOManager.cpp
-  sModelDrawInfo.cpp
-  sPhysicsProperties.cpp
-  glad.c
   MaxGameEngine.vcxproj -> C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\x64\Release\MaxGameEngine.lib

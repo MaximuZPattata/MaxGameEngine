@@ -104,9 +104,6 @@
     <ClCompile Include="sPhysicsProperties.cpp">
       <Filter>Source Files\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="cPhysics_Update.cpp">
-      <Filter>Source Files\Physics</Filter>
-    </ClCompile>
     <ClCompile Include="cControlGameEngine.cpp">
       <Filter>Source Files\EngineControls</Filter>
     </ClCompile>

@@ -7,6 +7,7 @@
 #include <glm/mat4x4.hpp> 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include<iostream>
 #include <vector>
 #include <limits.h>
 #include <float.h>
@@ -70,17 +71,18 @@ glm::vec3 cPhysics::m_ClosestPtPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3
 	return u * a + v * b + w * c;
 }
 
-void cPhysics::CheckForCollision(cVAOManager* checkMesh, std::string filename, sModelDrawInfo* drawInfo, glm::vec3 spherePosition, float sphereRadius, cMesh* groundMesh, sPhysicsProperties* spherePhysicalProps)
+bool cPhysics::CheckForCollision(cVAOManager* checkMesh, std::string filename, sModelDrawInfo* drawInfo, glm::vec3 spherePosition, float sphereRadius, cMesh* groundMesh, sPhysicsProperties* spherePhysicalProps)
 {
 	glm::vec3 theMostClosestPoint = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
 	float closestDistanceSoFar = FLT_MAX;
-	glm::vec3 closestTriangleVertices[3] = { glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f) };
 	unsigned int indexOfClosestTriangle = INT_MAX;
 
 	if (checkMesh->FindDrawInfoByModelName(filename, *drawInfo))
 	{
 		for (unsigned int index = 0; index != drawInfo->numberOfIndices; index += 3)
 		{
+			//---------------Calculate vertex position-----------------------------
+
 			glm::vec3 verts[3];
 
 			verts[0].x = drawInfo->pVertices[drawInfo->pIndices[index]].x;
@@ -95,7 +97,7 @@ void cPhysics::CheckForCollision(cVAOManager* checkMesh, std::string filename, s
 			verts[2].y = drawInfo->pVertices[drawInfo->pIndices[index + 2]].y;
 			verts[2].z = drawInfo->pVertices[drawInfo->pIndices[index + 2]].z;
 
-			//-----------------------------------------------------------------------
+			//----------------Convert to world space------------------------------
 
 			glm::mat4 matModel = glm::mat4(1.0f);
 
@@ -135,13 +137,11 @@ void cPhysics::CheckForCollision(cVAOManager* checkMesh, std::string filename, s
 			vertsWorld[1] = (matModel * glm::vec4(verts[1], 1.0f));
 			vertsWorld[2] = (matModel * glm::vec4(verts[2], 1.0f));
 
-			//-----------------------------------------------------------------------
+			//-------------Calculate closest point-----------------------------------
 
-			glm::vec3 closestPointToTriangle = m_ClosestPtPointTriangle(spherePosition, verts[0], verts[1], verts[2]);
+			glm::vec3 closestPointToTriangle = m_ClosestPtPointTriangle(spherePosition, vertsWorld[0], vertsWorld[1], vertsWorld[2]);
 
 			float distanceToTriangle = glm::distance(closestPointToTriangle, spherePosition);
-
-			//float closestDistanceSoFar = glm::distance(theMostClosestPoint, spherePosition);
 
 			if (distanceToTriangle < closestDistanceSoFar)
 			{
@@ -149,28 +149,19 @@ void cPhysics::CheckForCollision(cVAOManager* checkMesh, std::string filename, s
 
 				indexOfClosestTriangle = index;
 
-				closestTriangleVertices[0] = verts[0];
-				closestTriangleVertices[1] = verts[1];
-				closestTriangleVertices[2] = verts[2];
+				spherePhysicalProps->closestTriangleVertices[0] = vertsWorld[0];
+				spherePhysicalProps->closestTriangleVertices[1] = vertsWorld[1];
+				spherePhysicalProps->closestTriangleVertices[2] = vertsWorld[2];
 			}
 		}
 
+		//-------------Check for collision------------------------------------------
+
 		if (closestDistanceSoFar < sphereRadius)
 		{
-			glm::vec3 sphereDirection = spherePhysicalProps->velocity;
-			sphereDirection = glm::normalize(sphereDirection);
-
-			glm::vec3 edgeA = closestTriangleVertices[1] - closestTriangleVertices[0];
-			glm::vec3 edgeB = closestTriangleVertices[2] - closestTriangleVertices[0];
-
-			glm::vec3 triNormal = glm::normalize(glm::cross(edgeA, edgeB));
-
-			glm::vec3 reflectionVector = glm::reflect(sphereDirection, triNormal);
-
-			float sphereSpeed = glm::length(spherePhysicalProps->velocity);
-			glm::vec3 newVelocity = reflectionVector * sphereSpeed;
-
-			spherePhysicalProps->velocity = newVelocity;
+			return true;
 		}
 	}
+
+	return false;
 }
