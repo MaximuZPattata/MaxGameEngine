@@ -19,11 +19,11 @@
 
 cMesh* cControlGameEngine::g_pFindMeshByFriendlyName(std::string friendlyNameToFind)
 {
-    for (unsigned int index = 0; index != g_vec_pMeshesToDraw.size(); index++)
+    for (unsigned int index = 0; index != TotalMeshList.size(); index++)
     {
-        if (g_vec_pMeshesToDraw[index]->friendlyName == friendlyNameToFind)
+        if (TotalMeshList[index]->friendlyName == friendlyNameToFind)
         {
-            return g_vec_pMeshesToDraw[index];
+            return TotalMeshList[index];
         }
     }
 
@@ -34,11 +34,11 @@ cMesh* cControlGameEngine::g_pFindMeshByFriendlyName(std::string friendlyNameToF
 
 sModelDrawInfo* cControlGameEngine::g_pFindModelInfoByFriendlyName(std::string friendlyNameToFind)
 {
-    for (unsigned int index = 0; index != newMeshAdd.size(); index++)
+    for (unsigned int index = 0; index != MeshDrawInfoList.size(); index++)
     {
-        if (newMeshAdd[index]->friendlyName == friendlyNameToFind)
+        if (MeshDrawInfoList[index]->friendlyName == friendlyNameToFind)
         {
-            return newMeshAdd[index];
+            return MeshDrawInfoList[index];
         }
     }
 
@@ -49,11 +49,11 @@ sModelDrawInfo* cControlGameEngine::g_pFindModelInfoByFriendlyName(std::string f
 
 sPhysicsProperties* cControlGameEngine::FindPhysicalModelByName(std::string modelName)
 {
-    for (unsigned int index = 0; index != gModelPhysicalProps.size(); index++)
+    for (unsigned int index = 0; index != PhysicsModelList.size(); index++)
     {
-        if (gModelPhysicalProps[index]->modelName == modelName)
+        if (PhysicsModelList[index]->modelName == modelName)
         {
-            return gModelPhysicalProps[index];
+            return PhysicsModelList[index];
         }
     }
 
@@ -108,27 +108,27 @@ void cControlGameEngine::DrawObject(cMesh* pCurrentMesh, glm::mat4 matModelParen
 
     //-------------------------Get Debug Color from Shader----------------------------------------
 
-    GLint bUseDebugColour_UL = glGetUniformLocation(shaderProgramID, "bUseDebugColour");
+    GLint bUseManualColour_UL = glGetUniformLocation(shaderProgramID, "bUseManualColour");
 
-    if (pCurrentMesh->bUseDebugColours)
+    if (pCurrentMesh->bUseManualColours)
     {
-        glUniform1f(bUseDebugColour_UL, (GLfloat)GL_TRUE);
+        glUniform1f(bUseManualColour_UL, (GLfloat)GL_TRUE);
 
-        GLint debugColourRGBA_UL = glGetUniformLocation(shaderProgramID, "debugColourRGBA");
-        glUniform4f(debugColourRGBA_UL,
-            pCurrentMesh->wholeObjectDebugColourRGBA.r,
-            pCurrentMesh->wholeObjectDebugColourRGBA.g,
-            pCurrentMesh->wholeObjectDebugColourRGBA.b,
-            pCurrentMesh->wholeObjectDebugColourRGBA.a);
+        GLint manualColourRGBA_UL = glGetUniformLocation(shaderProgramID, "manualColourRGBA");
+        glUniform4f(manualColourRGBA_UL,
+            pCurrentMesh->wholeObjectManualColourRGBA.r,
+            pCurrentMesh->wholeObjectManualColourRGBA.g,
+            pCurrentMesh->wholeObjectManualColourRGBA.b,
+            pCurrentMesh->wholeObjectManualColourRGBA.a);
     }
     else
-        glUniform1f(bUseDebugColour_UL, (GLfloat)GL_FALSE);
+        glUniform1f(bUseManualColour_UL, (GLfloat)GL_FALSE);
 
     //-------------------------Find Model Info and Draw----------------------------------------
 
     sModelDrawInfo modelInfo;
 
-    if (gMeshManager->FindDrawInfoByModelName(pCurrentMesh->meshName, modelInfo))
+    if (mVAOManager->FindDrawInfoByModelName(pCurrentMesh->meshName, modelInfo))
     {
         // Found it!!!
 
@@ -154,22 +154,22 @@ void cControlGameEngine::DrawObject(cMesh* pCurrentMesh, glm::mat4 matModelParen
 
 int cControlGameEngine::InitializeShader()
 {
-    pShaderThing = new cShaderManager();
+    mShaderManager = new cShaderManager();
 
-    pShaderThing->setBasePath("Assets/Shaders");
+    mShaderManager->setBasePath("Assets/Shaders");
 
     vertexShader.fileName = "vertexShader01.glsl";
 
     fragmentShader.fileName = "fragmentShader01.glsl";
 
-    if (!pShaderThing->createProgramFromFile("shader01", vertexShader, fragmentShader))
+    if (!mShaderManager->createProgramFromFile("shader01", vertexShader, fragmentShader))
     {
         std::cout << "Error: Couldn't compile or link:" << std::endl;
-        std::cout << pShaderThing->getLastError();
+        std::cout << mShaderManager->getLastError();
         return -1;
     }
 
-    shaderProgramID = pShaderThing->getIDFromFriendlyName("shader01");
+    shaderProgramID = mShaderManager->getIDFromFriendlyName("shader01");
 
     return 0;
 }
@@ -204,7 +204,7 @@ void cControlGameEngine::ChangeColor(std::string modelName, float r, float g, fl
 {
     cMesh* meshToBeScaled = g_pFindMeshByFriendlyName(modelName);
 
-    meshToBeScaled->wholeObjectDebugColourRGBA = glm::vec4(r, g, b, 1.0f);
+    meshToBeScaled->wholeObjectManualColourRGBA = glm::vec4(r, g, b, 1.0f);
 }
 
 void cControlGameEngine::UseDifferentColors(std::string modelName, bool useColor)
@@ -212,9 +212,9 @@ void cControlGameEngine::UseDifferentColors(std::string modelName, bool useColor
     cMesh* meshToBeScaled = g_pFindMeshByFriendlyName(modelName);
 
     if (useColor)
-        meshToBeScaled->bUseDebugColours = true;
+        meshToBeScaled->bUseManualColours = true;
     else
-        meshToBeScaled->bUseDebugColours = false;
+        meshToBeScaled->bUseManualColours = false;
 }
 
 void cControlGameEngine::ScaleModel(std::string modelName, float scale_value)
@@ -288,13 +288,13 @@ void cControlGameEngine::DeleteMesh(std::string modelName)
     sModelDrawInfo* modelInfo = g_pFindModelInfoByFriendlyName(modelName);
 
     if (meshModel != NULL)
-        g_vec_pMeshesToDraw.erase(std::remove(g_vec_pMeshesToDraw.begin(), g_vec_pMeshesToDraw.end(), meshModel), g_vec_pMeshesToDraw.end());
+        TotalMeshList.erase(std::remove(TotalMeshList.begin(), TotalMeshList.end(), meshModel), TotalMeshList.end());
 
     if (physicalModel != NULL)
-        gModelPhysicalProps.erase(std::remove(gModelPhysicalProps.begin(), gModelPhysicalProps.end(), physicalModel), gModelPhysicalProps.end());
+        PhysicsModelList.erase(std::remove(PhysicsModelList.begin(), PhysicsModelList.end(), physicalModel), PhysicsModelList.end());
 
     if (modelInfo != NULL)
-        newMeshAdd.erase(std::remove(newMeshAdd.begin(), newMeshAdd.end(), modelInfo), newMeshAdd.end());
+        MeshDrawInfoList.erase(std::remove(MeshDrawInfoList.begin(), MeshDrawInfoList.end(), modelInfo), MeshDrawInfoList.end());
 }
 
 //--------------------------------------Lights Controls-----------------------------------------------------------------
@@ -308,85 +308,85 @@ void cControlGameEngine::CreateLight(int lightId, float initial_x, float initial
     }
     std::cout << "Light : " << lightId << " Created !" << std::endl;
 
-    gTheLights->SetUniformLocations(shaderProgramID, lightId);
+    mLightManager->SetUniformLocations(shaderProgramID, lightId);
 
-    gTheLights->theLights[lightId].param2.x = 1.0f; // Turn on
+    mLightManager->theLights[lightId].param2.x = 1.0f; // Turn on
 
-    gTheLights->theLights[lightId].param1.x = 2.0f;   // 0 = point light , 1 = spot light , 2 = directional light
+    mLightManager->theLights[lightId].param1.x = 2.0f;   // 0 = point light , 1 = spot light , 2 = directional light
 
-    gTheLights->theLights[lightId].param1.y = 50.0f; // inner angle
+    mLightManager->theLights[lightId].param1.y = 50.0f; // inner angle
 
-    gTheLights->theLights[lightId].param1.z = 50.0f; // outer angle
+    mLightManager->theLights[lightId].param1.z = 50.0f; // outer angle
 
-    gTheLights->theLights[lightId].position.x = initial_x;
+    mLightManager->theLights[lightId].position.x = initial_x;
 
-    gTheLights->theLights[lightId].position.y = initial_y;
+    mLightManager->theLights[lightId].position.y = initial_y;
 
-    gTheLights->theLights[lightId].position.z = initial_z;
+    mLightManager->theLights[lightId].position.z = initial_z;
 
-    gTheLights->theLights[lightId].direction = glm::vec4(0.0f, -1.0f, 0.0f, 1.0f);
+    mLightManager->theLights[lightId].direction = glm::vec4(0.0f, -1.0f, 0.0f, 1.0f);
 
-    gTheLights->theLights[lightId].atten.x = 0.0f;        // Constant attenuation
+    mLightManager->theLights[lightId].atten.x = 0.0f;        // Constant attenuation
 
-    gTheLights->theLights[lightId].atten.y = 0.1f;        // Linear attenuation
+    mLightManager->theLights[lightId].atten.y = 0.1f;        // Linear attenuation
 
-    gTheLights->theLights[lightId].atten.z = 0.0f;        // Quadratic attenuation
+    mLightManager->theLights[lightId].atten.z = 0.0f;        // Quadratic attenuation
 }
 
 void cControlGameEngine::TurnOffLight(int lightId, bool turnOff)
 {
     if (turnOff)
-        gTheLights->theLights[lightId].param2.x = 0.0f;
+        mLightManager->theLights[lightId].param2.x = 0.0f;
     else
-        gTheLights->theLights[lightId].param2.x = 1.0f;
+        mLightManager->theLights[lightId].param2.x = 1.0f;
 }
 
 void cControlGameEngine::PositionLight(int lightId, float translate_x, float translate_y, float translate_z)
 {
-    gTheLights->theLights[lightId].position.x = translate_x;
+    mLightManager->theLights[lightId].position.x = translate_x;
 
-    gTheLights->theLights[lightId].position.y = translate_y;
+    mLightManager->theLights[lightId].position.y = translate_y;
 
-    gTheLights->theLights[lightId].position.z = translate_z;
+    mLightManager->theLights[lightId].position.z = translate_z;
 }
 
 void cControlGameEngine::ChangeLightIntensity(int lightId, float linearAttentuation, float quadraticAttentuation)
 {
-    gTheLights->theLights[lightId].atten.y = linearAttentuation;
+    mLightManager->theLights[lightId].atten.y = linearAttentuation;
 
-    gTheLights->theLights[lightId].atten.z = quadraticAttentuation;
+    mLightManager->theLights[lightId].atten.z = quadraticAttentuation;
 }
 
 void cControlGameEngine::ChangeLightType(int lightId, float lightType)
 {
-    gTheLights->theLights[lightId].param1.x = lightType;
+    mLightManager->theLights[lightId].param1.x = lightType;
 }
 
 void cControlGameEngine::ChangeLightAngle(int lightId, float innerAngle, float outerAngle)
 {
-    gTheLights->theLights[lightId].param1.y = innerAngle; // inner angle
+    mLightManager->theLights[lightId].param1.y = innerAngle; // inner angle
 
-    gTheLights->theLights[lightId].param1.z = outerAngle; // outer angle
+    mLightManager->theLights[lightId].param1.z = outerAngle; // outer angle
 }
 
 void cControlGameEngine::ChangeLightDirection(int lightId, float direction_x, float direction_y, float direction_z)
 {
-    gTheLights->theLights[lightId].direction = glm::vec4(direction_x, direction_y, direction_z, 1.0f);
+    mLightManager->theLights[lightId].direction = glm::vec4(direction_x, direction_y, direction_z, 1.0f);
 
 }
 
 void cControlGameEngine::ChangeLightColour(int lightId, float color_r, float color_g, float color_b)
 {
-    gTheLights->theLights[lightId].diffuse = glm::vec4(color_r, color_g, color_b, 1.0f);
+    mLightManager->theLights[lightId].diffuse = glm::vec4(color_r, color_g, color_b, 1.0f);
 }
 
 //--------------------------------------Physics Controls---------------------------------------------------------------
 
 void  cControlGameEngine::CheckForPhysicalModel(double deltaTime, std::string modelName)
 {
-    for (int physicalModelCount = 0; physicalModelCount < gModelPhysicalProps.size(); physicalModelCount++)
+    for (int physicalModelCount = 0; physicalModelCount < PhysicsModelList.size(); physicalModelCount++)
     {
-        sPhysicsProperties* spherePhysicalModel = FindPhysicalModelByName(gModelPhysicalProps[physicalModelCount]->modelName);
+        sPhysicsProperties* spherePhysicalModel = FindPhysicalModelByName(PhysicsModelList[physicalModelCount]->modelName);
 
         if (spherePhysicalModel != NULL)
         {
@@ -431,7 +431,7 @@ void cControlGameEngine::DoPhysics(sPhysicsProperties* physicsModel, std::string
         physicsModel->position.y < model2Mesh->drawPosition.y + 70.0f && physicsModel->position.y > model2Mesh->drawPosition.y - 70.0f &&
         physicsModel->position.z < model2Mesh->drawPosition.z + 200.0f && physicsModel->position.z > model2Mesh->drawPosition.z - 200.0f)
     {
-        result = gPhysics->CheckForCollision(gMeshManager, modelInfo->meshFileName, modelInfo, physicsModel->position, physicsModel->radius, model2Mesh, physicsModel);
+        result = mPhysicsManager->CheckForCollision(mVAOManager, modelInfo->meshFileName, modelInfo, physicsModel->position, physicsModel->radius, model2Mesh, physicsModel);
     }
 
     if (result == true)
@@ -495,7 +495,7 @@ void cControlGameEngine::AddPhysicsToMesh(std::string modelName, float objectRad
 
     newPhysicsModel->position = modelPosition;
 
-    gModelPhysicalProps.push_back(newPhysicsModel);
+    PhysicsModelList.push_back(newPhysicsModel);
 }
 
 void cControlGameEngine::ChangeModelPhysicsVelocity(std::string modelName, glm::vec3 velocityChange)
@@ -520,7 +520,7 @@ void cControlGameEngine::LoadModelsInto3DSpace(std::string filePath, std::string
 
     cMesh* newMesh = new cMesh();
 
-    bool result = gMeshManager->LoadModelIntoVAO(modelName, filePath, *newModel, shaderProgramID);
+    bool result = mVAOManager->LoadModelIntoVAO(modelName, filePath, *newModel, shaderProgramID);
 
     if (!result)
     {
@@ -528,7 +528,7 @@ void cControlGameEngine::LoadModelsInto3DSpace(std::string filePath, std::string
         return;
     }
 
-    newMeshAdd.push_back(newModel);
+    MeshDrawInfoList.push_back(newModel);
 
     newMesh->meshName = filePath;
 
@@ -538,7 +538,7 @@ void cControlGameEngine::LoadModelsInto3DSpace(std::string filePath, std::string
 
     std::cout << "Loaded: " << newMesh->friendlyName << " | Vertices : " << newModel->numberOfVertices << std::endl;
 
-    g_vec_pMeshesToDraw.push_back(newMesh);
+    TotalMeshList.push_back(newMesh);
 }
 
 int cControlGameEngine::InitializeGameEngine()
@@ -552,17 +552,17 @@ int cControlGameEngine::InitializeGameEngine()
 
     //-------------------------------------VAO Initialize---------------------------------------------------------------------
 
-    gMeshManager = new cVAOManager();
+    mVAOManager = new cVAOManager();
 
-    gMeshManager->setBasePath("Assets/Models");
+    mVAOManager->setBasePath("Assets/Models");
 
-    gPhysics = new cPhysics();
+    mPhysicsManager = new cPhysics();
 
-    gPhysics->setVAOManager(gMeshManager);
+    mPhysicsManager->setVAOManager(mVAOManager);
 
     //------------------------------------Lights Initialize-----------------------------------------------------------------------
 
-    gTheLights = new cLightManager();
+    mLightManager = new cLightManager();
 
     // CreateLight(0);
 
@@ -590,7 +590,7 @@ void cControlGameEngine::RunGameEngine(GLFWwindow* window)
 
     //---------------------------Light Values Update----------------------------------------
 
-    gTheLights->UpdateUniformValues(shaderProgramID);
+    mLightManager->UpdateUniformValues(shaderProgramID);
 
     //---------------------------Camera Values----------------------------------------------
 
@@ -610,9 +610,9 @@ void cControlGameEngine::RunGameEngine(GLFWwindow* window)
 
     //----------------------------Draw all the objects--------------------------------------
 
-    for (unsigned int index = 0; index != g_vec_pMeshesToDraw.size(); index++)
+    for (unsigned int index = 0; index != TotalMeshList.size(); index++)
     {
-        cMesh* pCurrentMesh = g_vec_pMeshesToDraw[index];
+        cMesh* pCurrentMesh = TotalMeshList[index];
 
         if (pCurrentMesh->bIsVisible)
         {

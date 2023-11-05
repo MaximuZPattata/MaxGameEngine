@@ -80,17 +80,17 @@ int main()
 
     //---------------Add color to sphere------------------------------------
 
-    gameEngine.ChangeColor(addingNewModel, 1.0f, 0.5f, 0.0f);
+    gameEngine.ChangeColor(addingNewModel, 0.0f, 0.5f, 1.0f);
 
-    gameEngine.UseDifferentColors(addingNewModel, false);
+    gameEngine.UseDifferentColors(addingNewModel, true);
 
     //---------------Add physics to sphere----------------------------------
 
-   /* gameEngine.AddPhysicsToMesh(addingNewModel, 5.0f);
+    //gameEngine.AddPhysicsToMesh(addingNewModel, 5.0f);
 
-    gameEngine.ChangeModelPhysicsVelocity(addingNewModel, glm::vec3(0.0f, -1.0f, 0.0f));
+    //gameEngine.ChangeModelPhysicsVelocity(addingNewModel, glm::vec3(0.0f, -1.0f, 0.0f));
 
-    gameEngine.ChangeModelPhysicsAcceleration(addingNewModel, glm::vec3(0.0f, -9.81f, 0.0f));*/
+    //gameEngine.ChangeModelPhysicsAcceleration(addingNewModel, glm::vec3(0.0f, -9.81f, 0.0f));
 
     //----------------------------Ground Model----------------------------------------------
 
@@ -110,17 +110,17 @@ int main()
 
         //----------------------------Physics stuff-----------------------------------------
 
-        //double currentTime = glfwGetTime();
-        //double deltaTime = currentTime - lastTime;
+       /* double currentTime = glfwGetTime();
+        double deltaTime = currentTime - lastTime;
 
-        //const double LARGEST_DELTA_TIME = 1.0f / 30.0f;
+        const double LARGEST_DELTA_TIME = 1.0f / 30.0f;
 
-        //if (deltaTime > LARGEST_DELTA_TIME)
-        //    deltaTime = LARGEST_DELTA_TIME;
+        if (deltaTime > LARGEST_DELTA_TIME)
+            deltaTime = LARGEST_DELTA_TIME;
 
-        //lastTime = currentTime;
+        lastTime = currentTime;
 
-        //gameEngine.CheckForPhysicalModel(deltaTime, "Ground");
+        gameEngine.CheckForPhysicalModel(deltaTime, "Ground");*/
     }
 
     glfwDestroyWindow(window);

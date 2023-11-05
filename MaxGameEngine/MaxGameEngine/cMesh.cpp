@@ -1,7 +1,6 @@
 #include "cMesh.h"
 #include <iostream>	
 
-
 unsigned int cMesh::m_nextUniqueID = cMesh::FIRST_UNIQUE_ID;
 
 cMesh::cMesh()
@@ -9,13 +8,13 @@ cMesh::cMesh()
 	this->drawPosition = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->drawOrientation = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->setRotationFromEuler(glm::vec3(0.0f, 0.0f, 0.0f));
-	this->wholeObjectDebugColourRGBA = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	this->wholeObjectManualColourRGBA = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	this->drawScale = glm::vec3(1.0f);
 
 	this->bIsWireframe = false;
 	this->bDoNotLight = false;
 	this->bIsVisible = true;
-	this->bUseDebugColours = false;
+	this->bUseManualColours = false;
 
 	this->m_UniqueID = cMesh::m_nextUniqueID;
 

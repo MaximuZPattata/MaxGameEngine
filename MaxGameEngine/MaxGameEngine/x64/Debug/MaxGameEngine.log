@@ -1,2 +1,5 @@
 ﻿  cControlGameEngine.cpp
+  cMesh.cpp
+  cPhysics.cpp
+  Generating Code...
   MaxGameEngine.vcxproj -> C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\x64\Debug\MaxGameEngine.lib

@@ -17,8 +17,8 @@ uniform bool bDoNotLight;		// Really a float (0.0 or not zero)
 
 uniform vec4 eyeLocation;
 
-uniform bool bUseDebugColour;	// if this is true, then use debugColourRGBA for the colour
-uniform vec4 debugColourRGBA;		
+uniform bool bUseManualColour;	// if this is true, then use manualColourRGBA for the colour
+uniform vec4 manualColourRGBA;		
 
 struct sLight
 {
@@ -57,9 +57,9 @@ void main()
 
 	vec4 vertexRGBA = colour;
 	
-	if ( bUseDebugColour )
+	if ( bUseManualColour )
 	{	
-		vertexRGBA = debugColourRGBA;
+		vertexRGBA = manualColourRGBA;
 	}
 	
 	if ( bDoNotLight )

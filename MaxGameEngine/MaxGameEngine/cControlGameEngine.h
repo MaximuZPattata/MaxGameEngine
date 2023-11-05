@@ -20,19 +20,19 @@ private:
 
     GLuint shaderProgramID = 0;
 
-    cShaderManager* pShaderThing = NULL;
+    cShaderManager* mShaderManager = NULL;
 
-    cVAOManager* gMeshManager = NULL;
+    cVAOManager* mVAOManager = NULL;
 
-    cPhysics* gPhysics = NULL;
+    cPhysics* mPhysicsManager = NULL;
 
-    cLightManager* gTheLights = NULL;
+    cLightManager* mLightManager = NULL;
 
-    std::vector < sPhysicsProperties* > gModelPhysicalProps;
+    std::vector < sPhysicsProperties* > PhysicsModelList;
 
-    std::vector< cMesh* > g_vec_pMeshesToDraw;
+    std::vector< cMesh* > TotalMeshList;
 
-    std::vector < sModelDrawInfo* > newMeshAdd;
+    std::vector < sModelDrawInfo* > MeshDrawInfoList;
 
     cShaderManager::cShader vertexShader;
 
