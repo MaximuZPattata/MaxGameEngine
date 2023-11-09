@@ -4,13 +4,6 @@
 #include "GLWF_CallBacks.h"
 #include "cMesh.h"
 
-#include <glm/glm.hpp>
-#include <glm/vec3.hpp> 
-#include <glm/vec4.hpp> 
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/matrix_transform.hpp> 
-#include <glm/gtc/type_ptr.hpp>
-
 #include <iostream>
 #include <vector>
 #include <sstream>
@@ -180,22 +173,22 @@ int cControlGameEngine::InitializeShader()
 
 void cControlGameEngine::MoveCameraPosition(float translate_x, float translate_y, float translate_z)
 {
-    g_cameraEye = glm::vec3(translate_x, translate_y, translate_z);
+    cameraEye = glm::vec3(translate_x, translate_y, translate_z);
 }
 
 void cControlGameEngine::MoveCameraTarget(float translate_x, float translate_y, float translate_z)
 {
-    g_cameraTarget = glm::vec3(translate_x, translate_y, translate_z);
+    cameraTarget = glm::vec3(translate_x, translate_y, translate_z);
 }
 
 glm::vec3 cControlGameEngine::GetCurrentCameraPosition()
 {
-    return g_cameraEye;
+    return cameraEye;
 }
 
 glm::vec3 cControlGameEngine::GetCurrentCameraTarget()
 {
-    return g_cameraTarget;
+    return cameraTarget;
 }
 
 //--------------------------------------Mesh Controls-----------------------------------------------------------------
@@ -240,11 +233,20 @@ glm::vec3 cControlGameEngine::GetModelPosition(std::string modelName)
     return meshPosition->getDrawPosition();
 }
 
-void cControlGameEngine::RotateMeshModel(std::string modelName, float scalar, float rotate_x, float rotate_y, float rotate_z)
+float cControlGameEngine::GetModelScaleValue(std::string modelName)
+{
+    cMesh* meshScaleValue = g_pFindMeshByFriendlyName(modelName);
+
+    return meshScaleValue->drawScale.x;
+}
+
+void cControlGameEngine::RotateMeshModel(std::string modelName, float angleRadians, float rotate_x, float rotate_y, float rotate_z)
 {
     cMesh* meshToBeRotated = g_pFindMeshByFriendlyName(modelName);
 
-    glm::vec3 rotation = glm::vec3(rotate_x, rotate_y, rotate_z);
+    glm::quat rotation = glm::quat(angleRadians, rotate_x, rotate_y, rotate_z);
+
+    meshToBeRotated->setDrawOrientation(rotation);
 
     //meshToBeRotated->setRotationFromEuler(rotation);
 }
@@ -295,6 +297,48 @@ void cControlGameEngine::DeleteMesh(std::string modelName)
 
     if (modelInfo != NULL)
         MeshDrawInfoList.erase(std::remove(MeshDrawInfoList.begin(), MeshDrawInfoList.end(), modelInfo), MeshDrawInfoList.end());
+}
+
+cMesh* cControlGameEngine::ShiftToNextMeshInList()
+{
+    cMesh* existingMeshModel = TotalMeshList[meshListIndex];
+
+    meshListIndex++;
+
+    if (meshListIndex == TotalMeshList.size())
+        meshListIndex = 0;
+
+    return existingMeshModel;
+}
+
+cMesh* cControlGameEngine::ShiftToPreviousMeshInList()
+{
+    cMesh* existingMeshModel = TotalMeshList[meshListIndex];
+
+    meshListIndex--;
+
+    if (meshListIndex < 0)
+        meshListIndex = TotalMeshList.size() - 1;
+
+    return existingMeshModel;
+}
+
+cMesh* cControlGameEngine::GetCurrentModelSelected()
+{
+    return TotalMeshList[meshListIndex];
+}
+
+void cControlGameEngine::ShiftToNextLightInList()
+{
+    lightListIndex++;
+
+    if (lightListIndex > 10)
+        lightListIndex = 0;
+}
+
+int cControlGameEngine::GetCurrentLightSelected()
+{
+    return lightListIndex;
 }
 
 //--------------------------------------Lights Controls-----------------------------------------------------------------
@@ -380,9 +424,54 @@ void cControlGameEngine::ChangeLightColour(int lightId, float color_r, float col
     mLightManager->theLights[lightId].diffuse = glm::vec4(color_r, color_g, color_b, 1.0f);
 }
 
+glm::vec3 cControlGameEngine::GetLightPosition(int lightId)
+{
+    return mLightManager->theLights[lightId].position;
+}
+
+glm::vec3 cControlGameEngine::GetLightDirection(int lightId)
+{
+    return mLightManager->theLights[lightId].direction;
+}
+
+float cControlGameEngine::GetLightLinearAttenuation(int lightId)
+{
+    return mLightManager->theLights[lightId].atten.y;
+}
+
+float cControlGameEngine::GetLightQuadraticAttenuation(int lightId)
+{
+    return mLightManager->theLights[lightId].atten.z;
+}
+
+float cControlGameEngine::GetLightType(int lightId)
+{
+    return mLightManager->theLights[lightId].param1.x;
+}
+
+float cControlGameEngine::GetLightInnerAngle(int lightId)
+{
+    return mLightManager->theLights[lightId].param1.y;
+}
+
+float cControlGameEngine::GetLightOuterAngle(int lightId)
+{
+    return mLightManager->theLights[lightId].param1.z;
+}
+
+glm::vec3 cControlGameEngine::GetLightColor(int lightId)
+{
+    return mLightManager->theLights[lightId].diffuse;
+}
+
+float cControlGameEngine::IsLightOn(int lightId)
+{
+    return mLightManager->theLights[lightId].param2.x;
+}
+
 //--------------------------------------Physics Controls---------------------------------------------------------------
 
-void  cControlGameEngine::CheckForPhysicalModel(double deltaTime, std::string modelName)
+void  cControlGameEngine::CheckForPhysicalModel(std::string modelName)
 {
     for (int physicalModelCount = 0; physicalModelCount < PhysicsModelList.size(); physicalModelCount++)
     {
@@ -390,12 +479,12 @@ void  cControlGameEngine::CheckForPhysicalModel(double deltaTime, std::string mo
 
         if (spherePhysicalModel != NULL)
         {
-            DoPhysics(spherePhysicalModel, modelName, deltaTime);
+            DoPhysics(spherePhysicalModel, modelName);
         }
     }
 }
 
-void cControlGameEngine::DoPhysics(sPhysicsProperties* physicsModel, std::string Model2, double deltaTime)
+void cControlGameEngine::DoPhysics(sPhysicsProperties* physicsModel, std::string Model2)
 {
     //---------------------Calculate acceleration & velocity-------------------------------
 
@@ -471,7 +560,6 @@ void cControlGameEngine::CollisionResponse(sPhysicsProperties* physicsModel)
     //spherePhysicalProps->collisionPoint.z = triCentreZ;
 
 }
-
 void cControlGameEngine::ChangeModelPhysicsPosition(std::string modelName, float newPositionX, float newPositionY, float newPositionZ)
 {
     sPhysicsProperties* physicalModelFound = FindPhysicalModelByName(modelName);
@@ -564,8 +652,6 @@ int cControlGameEngine::InitializeGameEngine()
 
     mLightManager = new cLightManager();
 
-    // CreateLight(0);
-
     return 0;
 }
 
@@ -596,11 +682,11 @@ void cControlGameEngine::RunGameEngine(GLFWwindow* window)
 
     GLint eyeLocation_UL = glGetUniformLocation(shaderProgramID, "eyeLocation");
     glUniform4f(eyeLocation_UL,
-        g_cameraEye.x, g_cameraEye.y, g_cameraEye.z, 1.0f);
+        cameraEye.x, cameraEye.y, cameraEye.z, 1.0f);
 
     glm::mat4 matProjection = glm::perspective(0.6f, ratio, 0.1f, 1000.0f);
 
-    glm::mat4 matView = glm::lookAt(g_cameraEye, g_cameraTarget, g_upVector);
+    glm::mat4 matView = glm::lookAt(cameraEye, cameraEye + cameraTarget, upVector);
 
     GLint matProjection_UL = glGetUniformLocation(shaderProgramID, "matProjection");
     glUniformMatrix4fv(matProjection_UL, 1, GL_FALSE, glm::value_ptr(matProjection));
@@ -626,14 +712,50 @@ void cControlGameEngine::RunGameEngine(GLFWwindow* window)
 
     std::stringstream ssTitle;
 
-    ssTitle << "Camera Eye(x,y,z): "
-        << g_cameraEye.x << ", "
-        << g_cameraEye.y << ", "
-        << g_cameraEye.z << ") | "
-        << "Camera Target(x,y,z): "
-        << g_cameraTarget.x << ", "
-        << g_cameraTarget.y << ", "
-        << g_cameraTarget.z << ")";
+    //-----------------Light values displayed - Commented------------------------
+
+   /* int lightId = lightListIndex;
+
+    glm::vec3 lightPosition = GetLightPosition(lightId);
+    float lightLinearAtten = GetLightLinearAttenuation(lightId);
+    float lightQuadraticAtten = GetLightQuadraticAttenuation(lightId);
+    glm::vec3 lightDirection = GetLightDirection(lightId);
+    float lightType = GetLightType(lightId);
+    float lightInnerAngle = GetLightInnerAngle(lightId);
+    float lightOuterAngle = GetLightOuterAngle(lightId);
+
+    ssTitle << "Light Id : "
+        << lightId << " | Light Position : ("
+        << lightPosition.x << ", "
+        << lightPosition.y << ", "
+        << lightPosition.z << ") | Direction : ("
+        << lightDirection.x << ", "
+        << lightDirection.y << ", "
+        << lightDirection.z << ") |  Linear Atten : "
+        << lightLinearAtten << " | Quadratic Atten : "
+        << lightQuadraticAtten << " | Type : "
+        << lightType << " | Inner Angle : "
+        << lightInnerAngle << " | Outer Angle : "
+        << lightOuterAngle;*/
+
+        //----------------Cam and Model values displayed-----------------------------
+
+    cMesh* meshObj = GetCurrentModelSelected();
+
+    ssTitle << "Camera Eye(x, y, z) : ("
+        << cameraEye.x << ", "
+        << cameraEye.y << ", "
+        << cameraEye.z << ") | "
+        << "Camera Target(x,y,z): ("
+        << cameraTarget.x << ", "
+        << cameraTarget.y << ", "
+        << cameraTarget.z << ") | Yaw/Pitch : ("
+        << yaw << ", " << pitch << ") | ModelName : "
+        << meshObj->friendlyName << " | ModelPos : ("
+        << meshObj->drawPosition.x << ", "
+        << meshObj->drawPosition.y << ", "
+        << meshObj->drawPosition.z << ") | ModelScaleVal : "
+        << meshObj->drawScale.x;
 
     std::string theTitle = ssTitle.str();
 

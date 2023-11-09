@@ -1,8 +1,10 @@
 #include <cControlGameEngine.h>
 #include "GLWF_CallBacks.h"
 #include "cMesh.h"
+#include "cJsonReader.h"
 
 #include <iostream>
+#include <vector>
 
 static void error_callback(int error, const char* description)
 {
@@ -13,6 +15,10 @@ static void error_callback(int error, const char* description)
 
 GLFWwindow* window;
 cControlGameEngine gameEngine;
+cJsonReader jsonReader;
+std::vector<sModelDetailsFromFile> modelDetailsList;
+std::vector<sLightDetailsFromFile> lightDetailsList;
+sCameraDetailsFromFile camDetails;
 
 int main()
 {
@@ -28,7 +34,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "Simple example", NULL, NULL);
 
     if (!window)
     {
@@ -36,7 +42,11 @@ int main()
         exit(EXIT_FAILURE);
     }
 
+    //------------------------------Input key and Cursor initialize-----------------------------
+
     glfwSetKeyCallback(window, key_callback);
+
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
@@ -49,54 +59,66 @@ int main()
     if (result != 0)
         return -1;
 
-    //----------------------------Set Camera and default Lighting------------------------------------
+    //--------------------------------Loading Models, Lights and initial camera position from Json file---------------------------------------------
 
-    gameEngine.MoveCameraPosition(318.0f, 44.0f, 15.0f);
+    bool jsonresult = jsonReader.ReadScene("SceneDescription.json", modelDetailsList, lightDetailsList, camDetails);
 
-    int lightId = 0;
+    if (jsonresult)
+    {
+        std::cout << "File read successfully !" << std::endl;
 
-    gameEngine.CreateLight(lightId, 0.0f, 30.0f, 0.0f);
-    gameEngine.ChangeLightType(lightId, 2.0f);
-    gameEngine.ChangeLightIntensity(lightId, 0.1f, 0.0f);
-    gameEngine.ChangeLightAngle(lightId, 0.50f, 0.100f);
+        std::string modelName;
+        int lightId;
 
-    //--------------------------------Load Models-----------------------------------------------------
-    
-    //----------------------------Sphere Model----------------------------------------------
+        // Loading Models
+        for (int index = 0; index < modelDetailsList.size(); index++)
+        {
+            modelName = modelDetailsList[index].modelName;
 
-    //---------------Load sphere model--------------------------------------
+            gameEngine.LoadModelsInto3DSpace(modelDetailsList[index].modelFilePath, modelName,
+                modelDetailsList[index].modelPosition.x, modelDetailsList[index].modelPosition.y, modelDetailsList[index].modelPosition.z);
 
-    std::string addingNewModel = "Sphere";
+            float angleRadians = glm::radians(modelDetailsList[index].modelOrientation.w);
 
-    gameEngine.LoadModelsInto3DSpace("Sphere_1_unit_Radius.ply", addingNewModel, 0.0f, 30.0f, 0.0f);
+            gameEngine.RotateMeshModel(modelName, angleRadians, modelDetailsList[index].modelOrientation.x,
+                modelDetailsList[index].modelOrientation.y, modelDetailsList[index].modelOrientation.z);
 
-    //---------------Change sphere's mesh attributes------------------------
+            gameEngine.ScaleModel(modelName, modelDetailsList[index].modelScaleValue);
 
-    gameEngine.ScaleModel(addingNewModel, 5.0f);
+            if (modelDetailsList[index].wireframeModeOn)
+                gameEngine.TurnWireframeModeOn(modelName);
 
-    gameEngine.TurnMeshLightsOn(addingNewModel);
+            if (modelDetailsList[index].meshLightsOn)
+                gameEngine.TurnMeshLightsOn(modelName);
 
-    gameEngine.TurnWireframeModeOn(addingNewModel);
+            if (modelDetailsList[index].manualColors)
+            {
+                gameEngine.UseDifferentColors(modelName, true);
+                gameEngine.ChangeColor(modelName, modelDetailsList[index].modelColorRGB.x, modelDetailsList[index].modelColorRGB.y, modelDetailsList[index].modelColorRGB.z);
+            }
+        }
 
-    //---------------Add color to sphere------------------------------------
+        // Loading Lights
+        for (int index = 0; index < lightDetailsList.size(); index++)
+        {
+            lightId = lightDetailsList[index].lightId;
 
-    gameEngine.ChangeColor(addingNewModel, 0.0f, 0.5f, 1.0f);
+            gameEngine.CreateLight(lightId, lightDetailsList[index].lightPosition.x, lightDetailsList[index].lightPosition.y, lightDetailsList[index].lightPosition.z);
+            gameEngine.ChangeLightType(lightId, lightDetailsList[index].lightType);
+            gameEngine.ChangeLightIntensity(lightId, lightDetailsList[index].linearAttenuation, lightDetailsList[index].quadraticAttenuation);
+            gameEngine.ChangeLightDirection(lightId, lightDetailsList[index].lightDirection.x, lightDetailsList[index].lightDirection.y, lightDetailsList[index].lightDirection.z);
+            gameEngine.ChangeLightColour(lightId, lightDetailsList[index].lightColorRGB.r, lightDetailsList[index].lightColorRGB.g, lightDetailsList[index].lightColorRGB.b);
+            gameEngine.ChangeLightAngle(lightId, lightDetailsList[index].innerAngle, lightDetailsList[index].outerAngle);
 
-    gameEngine.UseDifferentColors(addingNewModel, true);
+            if (lightDetailsList[index].lightOn)
+                gameEngine.TurnOffLight(lightId, false);
+            else
+                gameEngine.TurnOffLight(lightId, true);
+        }
 
-    //---------------Add physics to sphere----------------------------------
-
-    //gameEngine.AddPhysicsToMesh(addingNewModel, 5.0f);
-
-    //gameEngine.ChangeModelPhysicsVelocity(addingNewModel, glm::vec3(0.0f, -1.0f, 0.0f));
-
-    //gameEngine.ChangeModelPhysicsAcceleration(addingNewModel, glm::vec3(0.0f, -9.81f, 0.0f));
-
-    //----------------------------Ground Model----------------------------------------------
-
-    addingNewModel = "Ground";
-
-    gameEngine.LoadModelsInto3DSpace("Flat_1x1_plane.ply", addingNewModel, 0.0f, 0.0f, 0.0f);
+        // Loading Initial Camera Position
+        gameEngine.MoveCameraPosition(camDetails.initialCameraPosition.x, camDetails.initialCameraPosition.y, camDetails.initialCameraPosition.z);
+    }
 
     //-------------------------------Frame loop---------------------------------------------
 
@@ -104,23 +126,21 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        //--------------------Run Engine----------------------------------------------------
+        //-------------------Calculate Delta time-------------------------------------------
 
-        gameEngine.RunGameEngine(window);
-
-        //----------------------------Physics stuff-----------------------------------------
-
-       /* double currentTime = glfwGetTime();
-        double deltaTime = currentTime - lastTime;
+        double currentTime = glfwGetTime();
+        gameEngine.deltaTime = currentTime - lastTime;
 
         const double LARGEST_DELTA_TIME = 1.0f / 30.0f;
 
-        if (deltaTime > LARGEST_DELTA_TIME)
-            deltaTime = LARGEST_DELTA_TIME;
+        if (gameEngine.deltaTime > LARGEST_DELTA_TIME)
+            gameEngine.deltaTime = LARGEST_DELTA_TIME;
 
         lastTime = currentTime;
 
-        gameEngine.CheckForPhysicalModel(deltaTime, "Ground");*/
+        //--------------------Run Engine----------------------------------------------------
+
+        gameEngine.RunGameEngine(window);
     }
 
     glfwDestroyWindow(window);

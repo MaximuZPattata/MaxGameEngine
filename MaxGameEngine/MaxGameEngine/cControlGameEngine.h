@@ -1,22 +1,22 @@
 #pragma once
 #include "cMesh.h"
 #include "cPhysics.h"
-//#include "sPhysicsProperties.h"
 #include "cLightManager.h"
 #include "cLightHelper.h"
 #include "cVAOManager.h"
 #include "cShaderManager.h"
-
 
 class cControlGameEngine
 {
 private:
 
     int gSelectedLight = 0;
+    int meshListIndex = 0;
+    int lightListIndex = 0;
 
-    glm::vec3 g_cameraEye = glm::vec3(0.0, 0.0f, 0.0f);
-    glm::vec3 g_cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 g_upVector = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 cameraEye = glm::vec3(0.0, 0.0f, 0.0f);
+    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
 
     GLuint shaderProgramID = 0;
 
@@ -50,6 +50,13 @@ private:
 
 public:
 
+    double deltaTime = 0.0f;
+    float yaw = -90.0f;   // Vertical axis(Left and Right)
+    float pitch = 0.0f;   // Horizontal axis(Up and Down)
+    float previousX = 0.0f, previousY = 0.0f;
+    bool mouseMoved = true;
+    bool enableMouseMovement = false;
+
     //-------------------Camera Controls---------------------------------------------------
 
     void MoveCameraPosition(float translate_x, float translate_y, float translate_z);
@@ -72,7 +79,9 @@ public:
 
     glm::vec3 GetModelPosition(std::string modelModel);
 
-    void RotateMeshModel(std::string modelModel, float scalar, float rotate_x, float rotate_y, float rotate_z);
+    float GetModelScaleValue(std::string modelModel);
+
+    void RotateMeshModel(std::string modelModel, float angleRadians, float rotate_x, float rotate_y, float rotate_z);
 
     void TurnVisibilityOn(std::string modelModel);
 
@@ -81,6 +90,12 @@ public:
     void TurnMeshLightsOn(std::string modelModel);
 
     void DeleteMesh(std::string modelName);
+
+    cMesh* ShiftToNextMeshInList();
+
+    cMesh* ShiftToPreviousMeshInList();
+
+    cMesh* GetCurrentModelSelected();
 
     //-------------------Light Controls---------------------------------------------------
 
@@ -100,11 +115,33 @@ public:
 
     void ChangeLightColour(int lightId, float color_r, float color_g, float color_b);
 
+    float GetLightLinearAttenuation(int lightId);
+
+    float GetLightQuadraticAttenuation(int lightId);
+
+    float GetLightType(int lightId);
+
+    float GetLightInnerAngle(int lightId);
+
+    float GetLightOuterAngle(int lightId);
+
+    float IsLightOn(int lightId);
+
+    glm::vec3 GetLightPosition(int lightId);
+
+    glm::vec3 GetLightDirection(int lightId);
+
+    glm::vec3 GetLightColor(int lightId);
+
+    void ShiftToNextLightInList();
+
+    int GetCurrentLightSelected();
+
     //------------------Physics Controls---------------------------------------------------
 
-    void CheckForPhysicalModel(double deltaTime, std::string modelName);
+    void CheckForPhysicalModel(std::string modelName);
 
-    void DoPhysics(sPhysicsProperties* physicsModel, std::string Model2, double deltaTime);
+    void DoPhysics(sPhysicsProperties* physicsModel, std::string Model2);
 
     void ChangeModelPhysicsPosition(std::string modelName, float newPositionX, float newPositionY, float newPositionZ);
 

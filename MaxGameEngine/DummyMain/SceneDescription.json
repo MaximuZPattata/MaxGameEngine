@@ -1,0 +1,41 @@
+{
+	"ModelProperties": [
+		{
+			"ModelName": "Sphere",
+			"FilePath": "Sphere_1_unit_Radius.ply",
+			"Position": [0.0, 20.0, 0.0],
+			"Rotation": [0.0, 0.0, 0.0, 0.0],
+			"Scale": 5.0,
+			"bMeshLightsOn": false,
+			"bWireframeModeOn": true,
+			"bUseManualColors": true,
+			"Color": [0.44, 0.36, 0.25]
+		},
+		{
+			"ModelName": "Ground",
+			"FilePath":"Flat_1x1_plane.ply",
+			"Position": [0.0, 0.0, 0.0],
+			"Rotation": [0.0, 0.0, 0.0, 0.0],
+			"Scale": 2.0,
+			"bMeshLightsOn": false,
+			"bWireframeModeOn": false,
+			"bUseManualColors": true,
+			"Color": [0.29, 0.44, 0.14]
+		}
+	],
+	"LightProperties": {
+			"LightId": 0,
+			"bLightOn": true, 
+			"LightType": 2.0,
+			"LinearAttenuation": 0.1,
+			"QuadraticAttenuation": 0.0,
+			"InnerAngle": 0.50,
+			"OuterAngle": 1.0,
+			"LightPosition": [0.0, 30.0, 0.0],
+			"LightDirection": [0.0, -1.0, 0.0],
+			"LightColor": [1.0, 1.0, 1.0]
+		},
+	"CameraProperties": {
+			"CameraPosition": [0.0, 30.0, 300.0]
+		}
+}
