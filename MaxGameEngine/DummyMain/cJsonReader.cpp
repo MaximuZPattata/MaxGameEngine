@@ -72,6 +72,8 @@ bool cJsonReader::ReadScene(const std::string& filePath, std::vector <sModelDeta
 		newModelDetails.modelColorRGB.r = modelDetails["Color"][0].GetFloat();
 		newModelDetails.modelColorRGB.g = modelDetails["Color"][1].GetFloat();
 		newModelDetails.modelColorRGB.b = modelDetails["Color"][2].GetFloat();
+		newModelDetails.physicsMeshType = modelDetails["PhysicsMesh"].GetString();
+		newModelDetails.modelRadius = modelDetails["Radius"].GetFloat();
 
 		differentModelDetails.push_back(newModelDetails);
 	}

@@ -139,13 +139,15 @@ public:
 
     //------------------Physics Controls---------------------------------------------------
 
-    void CheckForPhysicalModel(std::string modelName);
+    void MakePhysicsHappen();
 
     void DoPhysics(sPhysicsProperties* physicsModel, std::string Model2);
 
     void ChangeModelPhysicsPosition(std::string modelName, float newPositionX, float newPositionY, float newPositionZ);
 
-    void AddPhysicsToMesh(std::string modelName, float objectRadius);
+    void AddSpherePhysicsToMesh(std::string modelName, std::string physicsMeshType, float objectRadius);
+
+    void AddPlanePhysicsToMesh(std::string modelName, std::string physicsMeshType);
 
     void ChangeModelPhysicsVelocity(std::string modelName, glm::vec3 velocityChange);
 

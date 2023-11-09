@@ -22,9 +22,9 @@ public:
 
 	void setBasePath(std::string basePathWithoutSlash);
 
-	bool UpdateVAOBuffers(std::string fileName,
+	/*bool UpdateVAOBuffers(std::string fileName,
 		sModelDrawInfo& updatedDrawInfo,
-		unsigned int shaderProgramID);
+		unsigned int shaderProgramID);*/
 
 private:
 

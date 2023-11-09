@@ -8,19 +8,27 @@
 #include <limits.h>
 #include <vector>
 
-struct sPhysicsProperties
+
+struct sSpherePhysicsProperties
 {
-	glm::vec3 position;
 	glm::vec3 velocity;
 	glm::vec3 acceleration;
 	glm::vec3 closestTriangleVertices[3];
 
-
 	float radius = 0.0f;
-
-	std::string modelName;
-
 	float inverse_mass = 0.0f;
 
-	sPhysicsProperties();
+	sSpherePhysicsProperties();
+};
+
+struct sPhysicsProperties
+{
+	glm::vec3 position;
+	std::string modelName;
+	std::string physicsMeshType;
+	
+	sSpherePhysicsProperties* sphereProps = NULL;
+
+	sPhysicsProperties(std::string meshType);
+	~sPhysicsProperties();
 };

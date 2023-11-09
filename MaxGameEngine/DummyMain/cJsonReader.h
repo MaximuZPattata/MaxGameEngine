@@ -18,9 +18,12 @@ struct sModelDetailsFromFile
 	glm::vec3 modelColorRGB;
 
 	float modelScaleValue;
+	float modelRadius;
 	bool meshLightsOn;
 	bool wireframeModeOn;
 	bool manualColors;
+
+	std::string physicsMeshType;
 };
 
 // This struct is created to imitate the light variables in the json file

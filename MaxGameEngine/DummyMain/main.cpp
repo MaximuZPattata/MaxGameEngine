@@ -96,6 +96,23 @@ int main()
                 gameEngine.UseDifferentColors(modelName, true);
                 gameEngine.ChangeColor(modelName, modelDetailsList[index].modelColorRGB.x, modelDetailsList[index].modelColorRGB.y, modelDetailsList[index].modelColorRGB.z);
             }
+
+            //------------------------------Adding Physics----------------------------------------------
+
+            if (modelDetailsList[index].physicsMeshType == "Sphere")
+            {
+                gameEngine.AddSpherePhysicsToMesh(modelName, modelDetailsList[index].physicsMeshType, modelDetailsList[index].modelRadius);
+
+                gameEngine.ChangeModelPhysicsVelocity(modelName, glm::vec3(0.0f, -5.0f, 0.0f));
+
+                gameEngine.ChangeModelPhysicsAcceleration(modelName, glm::vec3(0.0f, -9.81f / 1.0f, 0.0f));
+            }
+            else if (modelDetailsList[index].physicsMeshType == "Plane")
+            {
+                gameEngine.AddPlanePhysicsToMesh(modelName, modelDetailsList[index].physicsMeshType);
+            }
+            else
+                std::cout << "The Physics mesh type cannot be identified for the model name - " << modelDetailsList[index].modelName << std::endl;
         }
 
         // Loading Lights
@@ -119,7 +136,8 @@ int main()
         // Loading Initial Camera Position
         gameEngine.MoveCameraPosition(camDetails.initialCameraPosition.x, camDetails.initialCameraPosition.y, camDetails.initialCameraPosition.z);
     }
-
+    else
+        return -1;
     //-------------------------------Frame loop---------------------------------------------
 
     double lastTime = glfwGetTime();
@@ -137,6 +155,10 @@ int main()
             gameEngine.deltaTime = LARGEST_DELTA_TIME;
 
         lastTime = currentTime;
+
+        //------------------Calculate Physics-----------------------------------------------
+       
+        gameEngine.MakePhysicsHappen();
 
         //--------------------Run Engine----------------------------------------------------
 

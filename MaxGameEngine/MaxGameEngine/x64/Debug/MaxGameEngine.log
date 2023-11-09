@@ -1,9 +1,4 @@
 ﻿  cControlGameEngine.cpp
-C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cControlGameEngine.cpp(321,46): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  cLightManager.cpp
-  cPhysics.cpp
-  cShader.cpp
-  cShaderManager.cpp
-  cVAOManager.cpp
-  Generating Code...
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cControlGameEngine.cpp(328,46): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cControlGameEngine.cpp(513,90): warning C4305: 'argument': truncation from 'double' to 'float'
   MaxGameEngine.vcxproj -> C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\x64\Debug\MaxGameEngine.lib

@@ -149,9 +149,9 @@ bool cPhysics::CheckForCollision(cVAOManager* checkMesh, std::string filename, s
 
 				indexOfClosestTriangle = index;
 
-				spherePhysicalProps->closestTriangleVertices[0] = vertsWorld[0];
-				spherePhysicalProps->closestTriangleVertices[1] = vertsWorld[1];
-				spherePhysicalProps->closestTriangleVertices[2] = vertsWorld[2];
+				spherePhysicalProps->sphereProps->closestTriangleVertices[0] = vertsWorld[0];
+				spherePhysicalProps->sphereProps->closestTriangleVertices[1] = vertsWorld[1];
+				spherePhysicalProps->sphereProps->closestTriangleVertices[2] = vertsWorld[2];
 			}
 		}
 

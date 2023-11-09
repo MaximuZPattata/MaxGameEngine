@@ -72,7 +72,7 @@ bool cVAOManager::LoadModelIntoVAO(std::string friendlyName, std::string fileNam
     glDisableVertexAttribArray(vcol_location);
     glDisableVertexAttribArray(vNormal_location);
 
-    this->m_map_ModelName_to_VAOID[drawInfo.meshFileName] = drawInfo;
+    this->m_map_ModelName_to_VAOID[drawInfo.friendlyName] = drawInfo;
 
     return true;
 }
@@ -208,24 +208,24 @@ bool cVAOManager::m_LoadTheFile_Ply_XYZ_N_RGBA(std::string theFileName, sModelDr
     return true;
 }
 
-bool cVAOManager::UpdateVAOBuffers(std::string fileName, sModelDrawInfo& updatedDrawInfo, unsigned int shaderProgramID)
-{
-    sModelDrawInfo updatedDrawInfo_TEMP;
-
-    if (!this->FindDrawInfoByModelName(fileName, updatedDrawInfo_TEMP))
-        return false;
-
-    glBindBuffer(GL_ARRAY_BUFFER, updatedDrawInfo.VertexBufferID);
-
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(sVertex) * updatedDrawInfo.numberOfVertices, (GLvoid*)updatedDrawInfo.pVertices);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, updatedDrawInfo.IndexBufferID);
-
-    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(unsigned int) * updatedDrawInfo.numberOfIndices, (GLvoid*)updatedDrawInfo.pIndices);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    return true;
-}
+//bool cVAOManager::UpdateVAOBuffers(std::string fileName, sModelDrawInfo& updatedDrawInfo, unsigned int shaderProgramID)
+//{
+//    sModelDrawInfo updatedDrawInfo_TEMP;
+//
+//    if (!this->FindDrawInfoByModelName(fileName, updatedDrawInfo_TEMP))
+//        return false;
+//
+//    glBindBuffer(GL_ARRAY_BUFFER, updatedDrawInfo.VertexBufferID);
+//
+//    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(sVertex) * updatedDrawInfo.numberOfVertices, (GLvoid*)updatedDrawInfo.pVertices);
+//
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, updatedDrawInfo.IndexBufferID);
+//
+//    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(unsigned int) * updatedDrawInfo.numberOfIndices, (GLvoid*)updatedDrawInfo.pIndices);
+//
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//
+//    return true;
+//}

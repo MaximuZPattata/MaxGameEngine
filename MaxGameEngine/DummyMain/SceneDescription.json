@@ -1,15 +1,30 @@
 {
 	"ModelProperties": [
 		{
-			"ModelName": "Sphere",
+			"ModelName": "Sphere_01",
 			"FilePath": "Sphere_1_unit_Radius.ply",
-			"Position": [0.0, 20.0, 0.0],
+			"Position": [-20.0, 20.0, 0.0],
 			"Rotation": [0.0, 0.0, 0.0, 0.0],
 			"Scale": 5.0,
-			"bMeshLightsOn": false,
+			"bMeshLightsOn": true,
 			"bWireframeModeOn": true,
 			"bUseManualColors": true,
-			"Color": [0.44, 0.36, 0.25]
+			"Color": [0.44, 0.36, 0.25],
+			"PhysicsMesh": "Sphere",
+			"Radius": 5.0
+		},
+		{
+			"ModelName": "Sphere_02",
+			"FilePath": "Sphere_1_unit_Radius.ply",
+			"Position": [20.0, 20.0, 0.0],
+			"Rotation": [0.0, 0.0, 0.0, 0.0],
+			"Scale": 5.0,
+			"bMeshLightsOn": true,
+			"bWireframeModeOn": true,
+			"bUseManualColors": true,
+			"Color": [0.56, 0.12, 0.5],
+			"PhysicsMesh": "Sphere",
+			"Radius": 5.0
 		},
 		{
 			"ModelName": "Ground",
@@ -17,10 +32,51 @@
 			"Position": [0.0, 0.0, 0.0],
 			"Rotation": [0.0, 0.0, 0.0, 0.0],
 			"Scale": 2.0,
-			"bMeshLightsOn": false,
+			"bMeshLightsOn": true,
 			"bWireframeModeOn": false,
 			"bUseManualColors": true,
-			"Color": [0.29, 0.44, 0.14]
+			"Color": [0.29, 0.44, 0.14],
+			"PhysicsMesh": "Plane",
+			"Radius": 0.0
+		},
+		{
+			"ModelName": "Wall_01",
+			"FilePath":"Flat_1x1_plane.ply",
+			"Position": [0.0, 30, 0.0],
+			"Rotation": [0.0, 0.0, 0.0, 0.0],
+			"Scale": 2.0,
+			"bMeshLightsOn": true,
+			"bWireframeModeOn": false,
+			"bUseManualColors": true,
+			"Color": [0.0, 0.30, 0.85],
+			"PhysicsMesh": "Plane",
+			"Radius": 0.0
+		},
+		{
+			"ModelName": "Wall_02",
+			"FilePath":"Flat_1x1_plane_rotated_z_axis.ply",
+			"Position": [40.0, 0.0, 0.0],
+			"Rotation": [0.0, 0.0, 0.0, 0.0],
+			"Scale": 2.0,
+			"bMeshLightsOn": true,
+			"bWireframeModeOn": false,
+			"bUseManualColors": true,
+			"Color": [0.1, 0.56, 0.2],
+			"PhysicsMesh": "Plane",
+			"Radius": 0.0
+		},
+		{
+			"ModelName": "Wall_03",
+			"FilePath":"Flat_1x1_plane_rotated_x_axis.ply",
+			"Position": [0.0, 0.0, 60.0],
+			"Rotation": [0.0, 0.0, 0.0, 0.0],
+			"Scale": 2.0,
+			"bMeshLightsOn": true,
+			"bWireframeModeOn": false,
+			"bUseManualColors": true,
+			"Color": [0.77, 0.24, 0.2],
+			"PhysicsMesh": "Plane",
+			"Radius": 0.0
 		}
 	],
 	"LightProperties": {
