@@ -16,7 +16,9 @@ public:
 
 	void setVAOManager(cVAOManager* pTheMeshManager);
 
-	bool CheckForCollision(cVAOManager* modelVAO, std::string filename, sModelDrawInfo* drawInfo, glm::vec3 spherePosition, float sphereRadius, cMesh* groundMesh, sPhysicsProperties* spherePhysicalProps);
+	bool CheckForPlaneCollision(cVAOManager* modelVAO, std::string filename, sModelDrawInfo* drawInfo, cMesh* groundMesh, sPhysicsProperties* spherePhysicalProps);
+
+	bool CheckForSphereCollision(sPhysicsProperties* sphere1PhysicalProps, sPhysicsProperties* sphere2PhysicalProps);
 
 private:
 

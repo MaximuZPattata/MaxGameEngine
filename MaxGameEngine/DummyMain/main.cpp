@@ -11,6 +11,13 @@ static void error_callback(int error, const char* description)
     fprintf(stderr, "Error: %s\n", description);
 }
 
+float getRandomFloats(float a, float b) {
+    float random = ((float)rand()) / (float)RAND_MAX;
+    float diff = b - a;
+    float r = random * diff;
+    return a + r;
+}
+
 //---------------------------Global Objects-----------------------------------------------
 
 GLFWwindow* window;
@@ -102,6 +109,8 @@ int main()
             if (modelDetailsList[index].physicsMeshType == "Sphere")
             {
                 gameEngine.AddSpherePhysicsToMesh(modelName, modelDetailsList[index].physicsMeshType, modelDetailsList[index].modelRadius);
+
+                float randomVelocity = getRandomFloats(0.7, 5.0);
 
                 gameEngine.ChangeModelPhysicsVelocity(modelName, glm::vec3(0.0f, -5.0f, 0.0f));
 

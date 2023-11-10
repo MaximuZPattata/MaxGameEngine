@@ -141,7 +141,7 @@ public:
 
     void MakePhysicsHappen();
 
-    void DoPhysics(sPhysicsProperties* physicsModel, std::string Model2);
+    void DoPhysics(sPhysicsProperties* physicsModel, std::string Model2, std::string collisionType);
 
     void ChangeModelPhysicsPosition(std::string modelName, float newPositionX, float newPositionY, float newPositionZ);
 
@@ -153,7 +153,9 @@ public:
 
     void ChangeModelPhysicsAcceleration(std::string modelName, glm::vec3 accelerationChange);
 
-    void CollisionResponse(sPhysicsProperties* physicsModel);
+    void planeCollisionResponse(sPhysicsProperties* physicsModel);
+
+    void sphereCollisionResponse(sPhysicsProperties* sphere1PhysicsModel, sPhysicsProperties* sphere2PhysicsModel);
 
     //-------------------Engine Controls---------------------------------------------------
 

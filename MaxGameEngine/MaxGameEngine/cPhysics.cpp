@@ -71,7 +71,7 @@ glm::vec3 cPhysics::m_ClosestPtPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3
 	return u * a + v * b + w * c;
 }
 
-bool cPhysics::CheckForCollision(cVAOManager* checkMesh, std::string filename, sModelDrawInfo* drawInfo, glm::vec3 spherePosition, float sphereRadius, cMesh* groundMesh, sPhysicsProperties* spherePhysicalProps)
+bool cPhysics::CheckForPlaneCollision(cVAOManager* checkMesh, std::string filename, sModelDrawInfo* drawInfo, cMesh* groundMesh, sPhysicsProperties* spherePhysicalProps)
 {
 	glm::vec3 theMostClosestPoint = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
 	float closestDistanceSoFar = FLT_MAX;
@@ -139,9 +139,9 @@ bool cPhysics::CheckForCollision(cVAOManager* checkMesh, std::string filename, s
 
 			//-------------Calculate closest point-----------------------------------
 
-			glm::vec3 closestPointToTriangle = m_ClosestPtPointTriangle(spherePosition, vertsWorld[0], vertsWorld[1], vertsWorld[2]);
+			glm::vec3 closestPointToTriangle = m_ClosestPtPointTriangle(spherePhysicalProps->position, vertsWorld[0], vertsWorld[1], vertsWorld[2]);
 
-			float distanceToTriangle = glm::distance(closestPointToTriangle, spherePosition);
+			float distanceToTriangle = glm::distance(closestPointToTriangle, spherePhysicalProps->position);
 
 			if (distanceToTriangle < closestDistanceSoFar)
 			{
@@ -157,10 +157,24 @@ bool cPhysics::CheckForCollision(cVAOManager* checkMesh, std::string filename, s
 
 		//-------------Check for collision------------------------------------------
 
-		if (closestDistanceSoFar < sphereRadius)
+		if (closestDistanceSoFar <= spherePhysicalProps->sphereProps->radius)
 		{
 			return true;
 		}
+	}
+
+	return false;
+}
+
+bool cPhysics::CheckForSphereCollision(sPhysicsProperties* firstSphereProps, sPhysicsProperties* secondSphereProps)
+{
+	float distanceToCollision = glm::distance(firstSphereProps->position, secondSphereProps->position);
+
+	float SumOfRadius = firstSphereProps->sphereProps->radius + secondSphereProps->sphereProps->radius;
+
+	if (distanceToCollision <= SumOfRadius)
+	{
+		return true;
 	}
 
 	return false;

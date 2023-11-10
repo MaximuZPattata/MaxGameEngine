@@ -8,6 +8,7 @@
 #include <vector>
 #include <sstream>
 
+
 float getRandomFloat(float a, float b) {
     float random = ((float)rand()) / (float)RAND_MAX;
     float diff = b - a;
@@ -496,7 +497,12 @@ void  cControlGameEngine::MakePhysicsHappen()
                     {
                         if (PhysicsModelList[anotherModelCount]->physicsMeshType == "Plane")
                         {
-                            DoPhysics(spherePhysicalModel, PhysicsModelList[anotherModelCount]->modelName);
+                            DoPhysics(spherePhysicalModel, PhysicsModelList[anotherModelCount]->modelName, PhysicsModelList[anotherModelCount]->physicsMeshType);
+                        } 
+                        
+                        else if (PhysicsModelList[anotherModelCount]->physicsMeshType == "Sphere")
+                        {
+                            DoPhysics(spherePhysicalModel, PhysicsModelList[anotherModelCount]->modelName, PhysicsModelList[anotherModelCount]->physicsMeshType);
                         }
                     }
                 }
@@ -506,11 +512,15 @@ void  cControlGameEngine::MakePhysicsHappen()
     }
 }
 
-void cControlGameEngine::DoPhysics(sPhysicsProperties* physicsModel, std::string Model2)
+void cControlGameEngine::DoPhysics(sPhysicsProperties* physicsModel, std::string model2Name, std::string collisionType)
 {
-    //---------------------Calculate acceleration & velocity-------------------------------
+    //-----Calculate acceleration & velocity(Euler forward integration step)-----------
 
-    glm::vec3 velocityChange = (physicsModel->sphereProps->acceleration + getRandomFloat(0.2, 0.5)) * (float)deltaTime; //Change later
+    float dampingFactor = 1.0f;
+   
+    glm::vec3 velocityChange = physicsModel->sphereProps->acceleration * (float)deltaTime;
+
+    physicsModel->sphereProps->velocity *= dampingFactor;
 
     physicsModel->sphereProps->velocity += velocityChange;
 
@@ -520,19 +530,21 @@ void cControlGameEngine::DoPhysics(sPhysicsProperties* physicsModel, std::string
     physicsModel->position.y += positionChange.y;
     physicsModel->position.z += positionChange.z;
 
+    //----------------Change it later----------------------------
+    
+    if (physicsModel->position.y < -200)
+    {
+        physicsModel->position.y = getRandomFloat(30.0, 50.0);
+        physicsModel->position.x = 0.0;
+        physicsModel->position.z = 0.0;
+        physicsModel->sphereProps->velocity = glm::vec3(0.0f, -getRandomFloat(1.0, 5.0), 0.0f);
+    }
+
     //---------------------Set sphere's position based on new velocity--------------------
 
     cMesh* sphereMesh = g_pFindMeshByFriendlyName(physicsModel->modelName);
 
     sphereMesh->setDrawPosition(physicsModel->position);
-
-    //---------------------Get second model's position--------------------------------------------
-
-    cMesh* model2Mesh = g_pFindMeshByFriendlyName(Model2);
-
-    model2Mesh->getDrawPosition();
-
-    sModelDrawInfo* modelInfo = g_pFindModelInfoByFriendlyName(Model2);
 
     //----------------------Check for Collision---------------------------------------------------
 
@@ -542,45 +554,100 @@ void cControlGameEngine::DoPhysics(sPhysicsProperties* physicsModel, std::string
         physicsModel->position.y < model2Mesh->drawPosition.y + 70.0f && physicsModel->position.y > model2Mesh->drawPosition.y - 70.0f &&
         physicsModel->position.z < model2Mesh->drawPosition.z + 200.0f && physicsModel->position.z > model2Mesh->drawPosition.z - 200.0f)
     {*/
-        result = mPhysicsManager->CheckForCollision(mVAOManager, modelInfo->friendlyName, modelInfo, physicsModel->position, physicsModel->sphereProps->radius, model2Mesh, physicsModel);
     //}
 
-    if (result == true)
+    if (collisionType == "Plane")
     {
-        CollisionResponse(physicsModel);
+        //---------------------Get second model's position--------------------------------------------
+
+        cMesh* model2Mesh = g_pFindMeshByFriendlyName(model2Name);
+
+        sModelDrawInfo* modelInfo = g_pFindModelInfoByFriendlyName(model2Name);
+
+        //------------------------Plane Collision Check---------------------------------------------
+
+        result = mPhysicsManager->CheckForPlaneCollision(mVAOManager, modelInfo->friendlyName, modelInfo, model2Mesh, physicsModel);
+
+        if (result == true)
+            planeCollisionResponse(physicsModel);
+    }
+
+    else if (collisionType == "Sphere")
+    {
+        //---------------------Get second model's position--------------------------------------------
+
+        sPhysicsProperties * secondSphereModel = FindPhysicalModelByName(model2Name);
+
+        //----------------------Sphere Collision Check---------------------------------------------
+
+        result = mPhysicsManager->CheckForSphereCollision(physicsModel, secondSphereModel);
+
+        if (result)
+            sphereCollisionResponse(physicsModel, secondSphereModel);
     }
 }
 
-void cControlGameEngine::CollisionResponse(sPhysicsProperties* physicsModel)
+void cControlGameEngine::planeCollisionResponse(sPhysicsProperties* physicsModel)
 {
-    glm::vec3 sphereDirection = physicsModel->sphereProps->velocity;
-    sphereDirection = glm::normalize(sphereDirection);
+        glm::vec3 sphereDirection = physicsModel->sphereProps->velocity;
+        sphereDirection = glm::normalize(sphereDirection);
 
-    glm::vec3 edgeA = physicsModel->sphereProps->closestTriangleVertices[1] - physicsModel->sphereProps->closestTriangleVertices[0];
-    glm::vec3 edgeB = physicsModel->sphereProps->closestTriangleVertices[2] - physicsModel->sphereProps->closestTriangleVertices[0];
+        glm::vec3 edgeA = physicsModel->sphereProps->closestTriangleVertices[1] - physicsModel->sphereProps->closestTriangleVertices[0];
+        glm::vec3 edgeB = physicsModel->sphereProps->closestTriangleVertices[2] - physicsModel->sphereProps->closestTriangleVertices[0];
 
-    glm::vec3 triNormal = glm::normalize(glm::cross(edgeA, edgeB));
+        glm::vec3 triNormal = glm::normalize(glm::cross(edgeA, edgeB));
 
-    glm::vec3 reflectionVector = glm::reflect(sphereDirection, triNormal);
+        glm::vec3 reflectionVector = glm::reflect(sphereDirection, triNormal);
 
-    float sphereSpeed = glm::length(physicsModel->sphereProps->velocity);
+        float sphereSpeed = glm::length(physicsModel->sphereProps->velocity);
 
-    glm::vec3 newVelocity = reflectionVector * sphereSpeed;
+        glm::vec3 newVelocity = reflectionVector * sphereSpeed;
 
-    physicsModel->sphereProps->velocity = newVelocity;
+        physicsModel->sphereProps->velocity = newVelocity;
 
-    //std::cout << "Hit!!" << std::endl;
+        //std::cout << "Hit!!" << std::endl;
 
-    //----------------Find Centroid of triangle-------------------------
+        //----------------Find Centroid of triangle-------------------------
 
-    //float triCentreX = (closestTriangleVertices[0].x + closestTriangleVertices[1].x + closestTriangleVertices[2].x) / 3;
-    //float triCentreY = (closestTriangleVertices[0].y + closestTriangleVertices[1].y + closestTriangleVertices[2].y) / 3;
-    //float triCentreZ = (closestTriangleVertices[0].z + closestTriangleVertices[1].z + closestTriangleVertices[2].z) / 3;
+        //float triCentreX = (closestTriangleVertices[0].x + closestTriangleVertices[1].x + closestTriangleVertices[2].x) / 3;
+        //float triCentreY = (closestTriangleVertices[0].y + closestTriangleVertices[1].y + closestTriangleVertices[2].y) / 3;
+        //float triCentreZ = (closestTriangleVertices[0].z + closestTriangleVertices[1].z + closestTriangleVertices[2].z) / 3;
 
-    //spherePhysicalProps->collisionPoint.x = triCentreX;
-    //spherePhysicalProps->collisionPoint.y = triCentreY;
-    //spherePhysicalProps->collisionPoint.z = triCentreZ;
+        //spherePhysicalProps->collisionPoint.x = triCentreX;
+        //spherePhysicalProps->collisionPoint.y = triCentreY;
+        //spherePhysicalProps->collisionPoint.z = triCentreZ;
+}
 
+void cControlGameEngine::sphereCollisionResponse(sPhysicsProperties* firstSphereModel, sPhysicsProperties* secondSphereModel)
+{
+    glm::vec3 normals = normalize(secondSphereModel->position - firstSphereModel->position); // Finding the perpendicular normal
+
+    glm::vec3 relativeVelocity = secondSphereModel->sphereProps->velocity - firstSphereModel->sphereProps->velocity; // Difference in velocities between two spheres
+
+    float relativeSpeed = glm::dot(relativeVelocity, normals); // Magnitude of relative velocity vector
+
+    if (relativeSpeed < 0)
+    {
+        float impulse = (2 * relativeSpeed) / (firstSphereModel->sphereProps->inverse_mass + secondSphereModel->sphereProps->inverse_mass); // Change in momentum(vector quantity) 
+
+        //impulse *= (float)deltaTime;
+
+        firstSphereModel->sphereProps->velocity += (impulse * (firstSphereModel->sphereProps->inverse_mass) * normals); 
+        secondSphereModel->sphereProps->velocity -= (impulse * (secondSphereModel->sphereProps->inverse_mass) * normals);
+
+        //--------------------------------------Moving the spheres out of collision-------------------------------------------------------------
+
+        // Overlap that has happened during collision
+        float collisionOverlap = firstSphereModel->sphereProps->radius + secondSphereModel->sphereProps->radius - glm::distance(firstSphereModel->position, secondSphereModel->position); 
+
+        //overlap *= (float)deltaTime;
+
+        if (collisionOverlap > 0)
+        {
+            firstSphereModel->position -= collisionOverlap / 2.0f * normals;
+            secondSphereModel->position += collisionOverlap / 2.0f * normals;
+        }
+    }
 }
 
 void cControlGameEngine::ChangeModelPhysicsPosition(std::string modelName, float newPositionX, float newPositionY, float newPositionZ)
