@@ -30,8 +30,8 @@ rapidjson::Document cJsonReader::ReadFile(std::string fileName)
 	return docReadObj;
 }
 
-bool cJsonReader::ReadScene(const std::string& filePath, std::vector <sModelDetailsFromFile>& differentModelDetails,
-	std::vector<sLightDetailsFromFile>& differentLightDetails, sCameraDetailsFromFile& camDetails)
+bool cJsonReader::ReadScene(const std::string& filePath, std::vector <sModelDetailsFromFile>& differentModelDetails, 
+	std::vector<sPhysicsDetailsFromFile>& differentPhysicsDetails, std::vector<sLightDetailsFromFile>& differentLightDetails, sCameraDetailsFromFile& camDetails)
 {
 	using namespace rapidjson;
 
@@ -48,6 +48,7 @@ bool cJsonReader::ReadScene(const std::string& filePath, std::vector <sModelDeta
 
 	const Value& modelArray = docObj["ModelProperties"];
 	const Value& lightingArray = docObj["LightProperties"];
+	const Value& physicsArray = docObj["PhysicalProperties"];
 	const Value& cameraInfo = docObj["CameraProperties"];
 
 	for (SizeType modelIndex = 0; modelIndex < modelArray.Size(); modelIndex++)
@@ -73,9 +74,28 @@ bool cJsonReader::ReadScene(const std::string& filePath, std::vector <sModelDeta
 		newModelDetails.modelColorRGB.g = modelDetails["Color"][1].GetFloat();
 		newModelDetails.modelColorRGB.b = modelDetails["Color"][2].GetFloat();
 		newModelDetails.physicsMeshType = modelDetails["PhysicsMesh"].GetString();
-		newModelDetails.modelRadius = modelDetails["Radius"].GetFloat();
 
 		differentModelDetails.push_back(newModelDetails);
+	}
+
+	for (SizeType physicsIndex = 0; physicsIndex < physicsArray.Size(); physicsIndex++)
+	{
+		const Value& physicsDetails = physicsArray[physicsIndex];
+
+		sPhysicsDetailsFromFile newPhysicsDetails;
+
+		newPhysicsDetails.modelName = physicsDetails["ModelName"].GetString();
+		newPhysicsDetails.modelRadius = physicsDetails["Radius"].GetFloat();
+		newPhysicsDetails.modelMass = physicsDetails["Mass"].GetFloat();
+		newPhysicsDetails.randomVelocity = physicsDetails["bRandomVelocity"].GetBool();
+		newPhysicsDetails.modelVelocity.x = physicsDetails["Velocity"][0].GetFloat();
+		newPhysicsDetails.modelVelocity.y = physicsDetails["Velocity"][1].GetFloat();
+		newPhysicsDetails.modelVelocity.z = physicsDetails["Velocity"][2].GetFloat();
+		newPhysicsDetails.modelAcceleration.x = physicsDetails["Acceleration"][0].GetFloat();
+		newPhysicsDetails.modelAcceleration.y = physicsDetails["Acceleration"][1].GetFloat();
+		newPhysicsDetails.modelAcceleration.z = physicsDetails["Acceleration"][2].GetFloat();
+
+		differentPhysicsDetails.push_back(newPhysicsDetails);
 	}
 
 	if (lightingArray.IsArray())

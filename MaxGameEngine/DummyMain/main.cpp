@@ -11,21 +11,16 @@ static void error_callback(int error, const char* description)
     fprintf(stderr, "Error: %s\n", description);
 }
 
-float getRandomFloats(float a, float b) {
-    float random = ((float)rand()) / (float)RAND_MAX;
-    float diff = b - a;
-    float r = random * diff;
-    return a + r;
-}
-
 //---------------------------Global Objects-----------------------------------------------
 
 GLFWwindow* window;
 cControlGameEngine gameEngine;
 cJsonReader jsonReader;
+sCameraDetailsFromFile camDetails;
+
 std::vector<sModelDetailsFromFile> modelDetailsList;
 std::vector<sLightDetailsFromFile> lightDetailsList;
-sCameraDetailsFromFile camDetails;
+std::vector<sPhysicsDetailsFromFile> physicsDetailsList;
 
 int main()
 {
@@ -68,7 +63,7 @@ int main()
 
     //--------------------------------Loading Models, Lights and initial camera position from Json file---------------------------------------------
 
-    bool jsonresult = jsonReader.ReadScene("SceneDescription.json", modelDetailsList, lightDetailsList, camDetails);
+    bool jsonresult = jsonReader.ReadScene("SceneDescription.json", modelDetailsList, physicsDetailsList, lightDetailsList, camDetails);
 
     if (jsonresult)
     {
@@ -100,23 +95,42 @@ int main()
 
             if (modelDetailsList[index].manualColors)
             {
-                gameEngine.UseDifferentColors(modelName, true);
+                gameEngine.UseManualColors(modelName, true);
                 gameEngine.ChangeColor(modelName, modelDetailsList[index].modelColorRGB.x, modelDetailsList[index].modelColorRGB.y, modelDetailsList[index].modelColorRGB.z);
             }
 
             //------------------------------Adding Physics----------------------------------------------
 
-            if (modelDetailsList[index].physicsMeshType == "Sphere")
+            if (modelDetailsList[index].physicsMeshType == "Sphere") // Sphere Physics
             {
-                gameEngine.AddSpherePhysicsToMesh(modelName, modelDetailsList[index].physicsMeshType, modelDetailsList[index].modelRadius);
+                for (int index = 0; index < physicsDetailsList.size(); index++)
+                {
+                    if (physicsDetailsList[index].modelName == modelName)
+                    {
+                        gameEngine.AddSpherePhysicsToMesh(modelName, modelDetailsList[index].physicsMeshType, physicsDetailsList[index].modelRadius);
+                        
+                        if (physicsDetailsList[index].randomVelocity)
+                        {
+                            float randomVelocity = gameEngine.getRandomFloat(0.7, 5.0);
 
-                float randomVelocity = getRandomFloats(0.7, 5.0);
+                            gameEngine.ChangeModelPhysicsVelocity(modelName, glm::vec3(0.0f, -5.0f, 0.0f));
+                        }
+                        else
+                            gameEngine.ChangeModelPhysicsVelocity(modelName, glm::vec3(physicsDetailsList[index].modelVelocity.x, physicsDetailsList[index].modelVelocity.y,
+                                physicsDetailsList[index].modelVelocity.z));
+                       
+                        gameEngine.ChangeModelPhysicsAcceleration(modelName, glm::vec3(physicsDetailsList[index].modelAcceleration.x, physicsDetailsList[index].modelAcceleration.y/50.0,
+                                                                    physicsDetailsList[index].modelAcceleration.z));
 
-                gameEngine.ChangeModelPhysicsVelocity(modelName, glm::vec3(0.0f, -5.0f, 0.0f));
+                        result = gameEngine.ChangeModelPhysicalMass(modelName, physicsDetailsList[index].modelMass);
 
-                gameEngine.ChangeModelPhysicsAcceleration(modelName, glm::vec3(0.0f, -9.81f / 1.0f, 0.0f));
+                        if (result != 0)
+                            std::cout << "Mass provided for the sphere - '" << modelName << "' is not above 0. Hence default mass 1.0/10.0 is used for this sphere model." << std::endl;
+                    }
+                   
+                }
             }
-            else if (modelDetailsList[index].physicsMeshType == "Plane")
+            else if (modelDetailsList[index].physicsMeshType == "Plane" || modelDetailsList[index].physicsMeshType == "Box") // Plane Physics
             {
                 gameEngine.AddPlanePhysicsToMesh(modelName, modelDetailsList[index].physicsMeshType);
             }
@@ -167,7 +181,9 @@ int main()
 
         //------------------Calculate Physics-----------------------------------------------
        
-        gameEngine.MakePhysicsHappen();
+        gameEngine.ComparePhysicalAttributesWithOtherModels();
+
+        gameEngine.AnimateTheCubes();
 
         //--------------------Run Engine----------------------------------------------------
 

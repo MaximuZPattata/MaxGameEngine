@@ -26,7 +26,7 @@ void cPhysics::setVAOManager(cVAOManager* pTheMeshManager)
 	return;
 }
 
-glm::vec3 cPhysics::m_ClosestPtPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c)
+glm::vec3 cPhysics::ClosestPtPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c)
 {
 	glm::vec3 ab = b - a;
 	glm::vec3 ac = c - a;
@@ -71,31 +71,36 @@ glm::vec3 cPhysics::m_ClosestPtPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3
 	return u * a + v * b + w * c;
 }
 
-bool cPhysics::CheckForPlaneCollision(cVAOManager* checkMesh, std::string filename, sModelDrawInfo* drawInfo, cMesh* groundMesh, sPhysicsProperties* spherePhysicalProps)
+bool cPhysics::CheckForPlaneCollision(sModelDrawInfo* drawInfo, cMesh* groundMesh, sPhysicsProperties* spherePhysicalProps)
 {
 	glm::vec3 theMostClosestPoint = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+	glm::vec3 closestPointToTriangle = glm::vec3(0.0f);
 	float closestDistanceSoFar = FLT_MAX;
 	unsigned int indexOfClosestTriangle = INT_MAX;
 
-	if (checkMesh->FindDrawInfoByModelName(filename, *drawInfo))
-	{
-		for (unsigned int index = 0; index != drawInfo->numberOfIndices; index += 3)
+	/*if (checkMesh->FindDrawInfoByModelName(filename, *drawInfo))
+	{*/
+		for (unsigned int index = 0; index < drawInfo->numberOfIndices; index += 3)
 		{
 			//---------------Calculate vertex position-----------------------------
 
 			glm::vec3 verts[3];
 
-			verts[0].x = drawInfo->pVertices[drawInfo->pIndices[index]].x;
-			verts[0].y = drawInfo->pVertices[drawInfo->pIndices[index]].y;
-			verts[0].z = drawInfo->pVertices[drawInfo->pIndices[index]].z;
+			unsigned int triangleIndex_0 = drawInfo->pIndices[index];
+			unsigned int triangleIndex_1 = drawInfo->pIndices[index + 1];
+			unsigned int triangleIndex_2 = drawInfo->pIndices[index + 2];
 
-			verts[1].x = drawInfo->pVertices[drawInfo->pIndices[index + 1]].x;
-			verts[1].y = drawInfo->pVertices[drawInfo->pIndices[index + 1]].y;
-			verts[1].z = drawInfo->pVertices[drawInfo->pIndices[index + 1]].z;
+			verts[0].x = drawInfo->pVertices[triangleIndex_0].x;
+			verts[0].y = drawInfo->pVertices[triangleIndex_0].y;
+			verts[0].z = drawInfo->pVertices[triangleIndex_0].z;
 
-			verts[2].x = drawInfo->pVertices[drawInfo->pIndices[index + 2]].x;
-			verts[2].y = drawInfo->pVertices[drawInfo->pIndices[index + 2]].y;
-			verts[2].z = drawInfo->pVertices[drawInfo->pIndices[index + 2]].z;
+			verts[1].x = drawInfo->pVertices[triangleIndex_1].x;
+			verts[1].y = drawInfo->pVertices[triangleIndex_1].y;
+			verts[1].z = drawInfo->pVertices[triangleIndex_1].z;
+
+			verts[2].x = drawInfo->pVertices[triangleIndex_2].x;
+			verts[2].y = drawInfo->pVertices[triangleIndex_2].y;
+			verts[2].z = drawInfo->pVertices[triangleIndex_2].z;
 
 			//----------------Convert to world space------------------------------
 
@@ -139,13 +144,13 @@ bool cPhysics::CheckForPlaneCollision(cVAOManager* checkMesh, std::string filena
 
 			//-------------Calculate closest point-----------------------------------
 
-			glm::vec3 closestPointToTriangle = m_ClosestPtPointTriangle(spherePhysicalProps->position, vertsWorld[0], vertsWorld[1], vertsWorld[2]);
+			glm::vec3 closestPointToTriangle = ClosestPtPointTriangle(spherePhysicalProps->position, vertsWorld[0], vertsWorld[1], vertsWorld[2]);
 
-			float distanceToTriangle = glm::distance(closestPointToTriangle, spherePhysicalProps->position);
+			spherePhysicalProps->sphereProps->distanceToTriangle = glm::distance(closestPointToTriangle, spherePhysicalProps->position);
 
-			if (distanceToTriangle < closestDistanceSoFar)
+			if (spherePhysicalProps->sphereProps->distanceToTriangle < closestDistanceSoFar)
 			{
-				closestDistanceSoFar = distanceToTriangle;
+				closestDistanceSoFar = spherePhysicalProps->sphereProps->distanceToTriangle;
 
 				indexOfClosestTriangle = index;
 
@@ -153,15 +158,23 @@ bool cPhysics::CheckForPlaneCollision(cVAOManager* checkMesh, std::string filena
 				spherePhysicalProps->sphereProps->closestTriangleVertices[1] = vertsWorld[1];
 				spherePhysicalProps->sphereProps->closestTriangleVertices[2] = vertsWorld[2];
 			}
+
+			//---------------Condition to add collision events to check for multiple triangle collisions-------------------------
+
+			if (spherePhysicalProps->sphereProps->distanceToTriangle < spherePhysicalProps->sphereProps->radius) 
+			{
+				sCollisionEvent triangleCollision;
+
+				triangleCollision.contactPoint = closestPointToTriangle;
+				spherePhysicalProps->sphereProps->ListOfCollisionsThisFrame.push_back(triangleCollision);
+			}
 		}
 
-		//-------------Check for collision------------------------------------------
+		//-----------------Check for collision------------------------------------------
 
-		if (closestDistanceSoFar <= spherePhysicalProps->sphereProps->radius)
-		{
+		if(!spherePhysicalProps->sphereProps->ListOfCollisionsThisFrame.empty())
 			return true;
-		}
-	}
+	//}
 
 	return false;
 }
@@ -178,4 +191,105 @@ bool cPhysics::CheckForSphereCollision(sPhysicsProperties* firstSphereProps, sPh
 	}
 
 	return false;
+}
+
+void cPhysics::PlaneCollisionResponse(sPhysicsProperties* sphereMesh, cMesh* planeMesh)
+{
+	glm::vec3 sphereDirection = sphereMesh->sphereProps->velocity;
+
+	sphereDirection = glm::normalize(sphereDirection);
+
+	glm::vec3 edgeA = sphereMesh->sphereProps->closestTriangleVertices[1] - sphereMesh->sphereProps->closestTriangleVertices[0];
+	glm::vec3 edgeB = sphereMesh->sphereProps->closestTriangleVertices[2] - sphereMesh->sphereProps->closestTriangleVertices[0];
+
+	glm::vec3 triNormal = glm::normalize(glm::cross(edgeA, edgeB));
+
+	glm::vec3 reflectionVector = glm::reflect(sphereDirection, triNormal);
+
+	float sphereSpeed = glm::length(sphereMesh->sphereProps->velocity);
+
+	glm::vec3 newVelocity = reflectionVector * sphereSpeed;
+
+	sphereMesh->sphereProps->velocity = newVelocity;
+
+	//-----------------------Find Centroid of triangle-----------------------------------
+
+	//float triCentreX = (sphereMesh->sphereProps->closestTriangleVertices[0].x + sphereMesh->sphereProps->closestTriangleVertices[1].x + sphereMesh->sphereProps->closestTriangleVertices[2].x) / 3;
+	//float triCentreY = (sphereMesh->sphereProps->closestTriangleVertices[0].y + sphereMesh->sphereProps->closestTriangleVertices[1].y + sphereMesh->sphereProps->closestTriangleVertices[2].y) / 3;
+	//float triCentreZ = (sphereMesh->sphereProps->closestTriangleVertices[0].z + sphereMesh->sphereProps->closestTriangleVertices[1].z + sphereMesh->sphereProps->closestTriangleVertices[2].z) / 3;
+
+	//glm::vec3 collisionPoint = glm::vec3(triCentreX, triCentreY, triCentreZ);
+
+	//--------------------------Check for overlaps---------------------------------------
+
+	glm::vec3 collisionPoint = sphereMesh->sphereProps->ListOfCollisionsThisFrame[0].contactPoint;
+
+	glm::vec3 normals = glm::normalize(collisionPoint - sphereMesh->position);
+
+	float collisionOverlap = sphereMesh->sphereProps->radius - sphereMesh->sphereProps->distanceToTriangle;
+
+	if (collisionOverlap > 0)
+	{
+		//std::cout << "Overlapped ! Sphere and Plane !" << std::endl;
+		sphereMesh->position -= collisionOverlap / 2.0f * normals;
+	}	
+
+	//-------------Check multiple triangle collisions this frame--------------------------
+
+	if (!sphereMesh->sphereProps->ListOfCollisionsThisFrame.empty())
+	{
+		if(sphereMesh->sphereProps->ListOfCollisionsThisFrame.size() > 2)
+			std::cout << "The sphere - " << sphereMesh->modelName << " has hit multiple triangles this frame!" << std::endl;
+
+		sphereMesh->sphereProps->ListOfCollisionsThisFrame.clear();
+	}
+}
+
+void cPhysics::SphereCollisionResponse(sPhysicsProperties* firstSphereModel, sPhysicsProperties* secondSphereModel)
+{
+	glm::vec3 normals = glm::normalize(secondSphereModel->position - firstSphereModel->position); // Finding the perpendicular normal
+
+	glm::vec3 relativeVelocity = secondSphereModel->sphereProps->velocity - firstSphereModel->sphereProps->velocity; // Difference in velocities between two spheres
+
+	float relativeSpeed = glm::dot(relativeVelocity, normals); // Magnitude of relative velocity vector
+
+	if (relativeSpeed < 0)
+	{
+		float impulse = (2 * relativeSpeed) / (firstSphereModel->sphereProps->inverse_mass + secondSphereModel->sphereProps->inverse_mass); // Change in momentum(vector quantity) 
+
+		//impulse *= (float)deltaTime;
+
+		firstSphereModel->sphereProps->velocity += (impulse * (firstSphereModel->sphereProps->inverse_mass) * normals);
+		secondSphereModel->sphereProps->velocity -= (impulse * (secondSphereModel->sphereProps->inverse_mass) * normals);
+
+		//--------------------------------------Moving the spheres out of collision-------------------------------------------------------------
+
+		// Overlap that has happened during collision
+		float collisionOverlap = firstSphereModel->sphereProps->radius + secondSphereModel->sphereProps->radius - glm::distance(firstSphereModel->position, secondSphereModel->position);
+
+		//overlap *= (float)deltaTime;
+
+		if (collisionOverlap > 0)
+		{
+			firstSphereModel->position -= collisionOverlap / 2.0f * normals;
+			secondSphereModel->position += collisionOverlap / 2.0f * normals;
+		}
+	}
+}
+
+void cPhysics::EulerForwardIntegration(sPhysicsProperties* physicsModel, double deltaTime)
+{
+	float dampingFactor = 1.0f;
+
+	glm::vec3 velocityChange = physicsModel->sphereProps->acceleration * (float)deltaTime;
+
+	physicsModel->sphereProps->velocity *= dampingFactor;
+
+	physicsModel->sphereProps->velocity += velocityChange;
+
+	glm::vec3 positionChange = physicsModel->sphereProps->velocity * (float)deltaTime;
+
+	physicsModel->position.x += positionChange.x;
+	physicsModel->position.y += positionChange.y;
+	physicsModel->position.z += positionChange.z;
 }

@@ -230,22 +230,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
         if (key == GLFW_KEY_2 && action)
         {
-            CAMERA_POSITION = glm::vec3(190.0f, 35.0f, 5.0f);
-            gameEngine.MoveCameraTarget(-1.0f, -0.1f, -0.05f);
+            CAMERA_POSITION = glm::vec3(125.0f, 200.0f, 305.0f);
+            gameEngine.MoveCameraTarget(-0.30f, -0.35f, -0.90f);
             resetCamAttributes();
         }
 
         if (key == GLFW_KEY_3 && action)
         {
-            CAMERA_POSITION = glm::vec3(-10.0f, 140.0f, -310.0f);
-            gameEngine.MoveCameraTarget(0.01f, -0.40f, 1.0f);
+            CAMERA_POSITION = glm::vec3(-135.0f, 130.0f, 305.0f);
+            gameEngine.MoveCameraTarget(0.50f, -0.20f, -0.85f);
             resetCamAttributes();
         }
 
         if (key == GLFW_KEY_4 && action)
         {
-            CAMERA_POSITION = glm::vec3(-300.0f, 20.0f, 3.5f);
-            gameEngine.MoveCameraTarget(1.0f, -0.02f, -0.03f);
+            CAMERA_POSITION = glm::vec3(-3.0f, 370.0f, -190.0f);
+            gameEngine.MoveCameraTarget(0.005f, -0.70f, 0.70f);
             resetCamAttributes();
         }
 

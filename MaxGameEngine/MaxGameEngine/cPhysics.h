@@ -16,17 +16,21 @@ public:
 
 	void setVAOManager(cVAOManager* pTheMeshManager);
 
-	bool CheckForPlaneCollision(cVAOManager* modelVAO, std::string filename, sModelDrawInfo* drawInfo, cMesh* groundMesh, sPhysicsProperties* spherePhysicalProps);
+	bool CheckForPlaneCollision(sModelDrawInfo* drawInfo, cMesh* groundMesh, sPhysicsProperties* spherePhysicalProps);
 
 	bool CheckForSphereCollision(sPhysicsProperties* sphere1PhysicalProps, sPhysicsProperties* sphere2PhysicalProps);
+
+	void PlaneCollisionResponse(sPhysicsProperties* physicsModel, cMesh* planeMesh);
+
+	void SphereCollisionResponse(sPhysicsProperties* firstSphereModel, sPhysicsProperties* secondSphereModel);
+
+	void EulerForwardIntegration(sPhysicsProperties* physicsModel, double deltaTime);
 
 private:
 
 	cVAOManager* m_pMeshManager = NULL;
 
-	std::vector< sPhysicsProperties* > m_vec_pPhysicalProps;
-
-	glm::vec3 m_ClosestPtPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c);
+	glm::vec3 ClosestPtPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c);
 
 };
 

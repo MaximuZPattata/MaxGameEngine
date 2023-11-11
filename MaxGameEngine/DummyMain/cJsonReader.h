@@ -11,19 +11,31 @@
 // This struct is created to imitate the model variables in the json file
 struct sModelDetailsFromFile
 {
+	float modelScaleValue;
+	bool meshLightsOn;
+	bool wireframeModeOn;
+	bool manualColors; 
+	
 	std::string modelName;
 	std::string modelFilePath;
+	std::string physicsMeshType;
+
 	glm::vec3 modelPosition;
 	glm::quat modelOrientation;
 	glm::vec3 modelColorRGB;
+};
 
-	float modelScaleValue;
+// This struct is created to imitate the physics variables in the json file
+struct sPhysicsDetailsFromFile
+{
 	float modelRadius;
-	bool meshLightsOn;
-	bool wireframeModeOn;
-	bool manualColors;
+	float modelMass;
+	bool randomVelocity;
 
-	std::string physicsMeshType;
+	std::string modelName;
+
+	glm::vec3 modelVelocity;
+	glm::vec3 modelAcceleration;
 };
 
 // This struct is created to imitate the light variables in the json file
@@ -53,8 +65,9 @@ class cJsonReader
 {
 public:
 
-	bool ReadScene(const std::string& filePath, std::vector <sModelDetailsFromFile>& differentModelDetails,
-		std::vector<sLightDetailsFromFile>& differentLightDetails, sCameraDetailsFromFile& camDetails);
+	bool ReadScene(const std::string& filePath, std::vector <sModelDetailsFromFile>& differentModelDetails, 
+		std::vector<sPhysicsDetailsFromFile>& differentPhysicsDetails, std::vector<sLightDetailsFromFile>& differentLightDetails, 
+		sCameraDetailsFromFile& camDetails);
 
 private:
 

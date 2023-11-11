@@ -8,14 +8,6 @@
 #include <vector>
 #include <sstream>
 
-
-float getRandomFloat(float a, float b) {
-    float random = ((float)rand()) / (float)RAND_MAX;
-    float diff = b - a;
-    float r = random * diff;
-    return a + r;
-}
-
 //-------------------------------------------------Private Functions-----------------------------------------------------------------------
 
 cMesh* cControlGameEngine::g_pFindMeshByFriendlyName(std::string friendlyNameToFind)
@@ -177,6 +169,17 @@ int cControlGameEngine::InitializeShader()
 
 //---------------------------------------------------Public Functions-----------------------------------------------------------------------
 
+//--------------------------------------Common functions---------------------------------------------------------------
+
+float cControlGameEngine::getRandomFloat(float num1, float num2)
+{
+    float randomNum = ((float)rand()) / (float)RAND_MAX;
+    float difference = num2 - num1;
+    float product = randomNum * difference;
+
+    return num1 + product;
+}
+
 //--------------------------------------Camera Controls----------------------------------------------------------------
 
 void cControlGameEngine::MoveCameraPosition(float translate_x, float translate_y, float translate_z)
@@ -208,7 +211,7 @@ void cControlGameEngine::ChangeColor(std::string modelName, float r, float g, fl
     meshToBeScaled->wholeObjectManualColourRGBA = glm::vec4(r, g, b, 1.0f);
 }
 
-void cControlGameEngine::UseDifferentColors(std::string modelName, bool useColor)
+void cControlGameEngine::UseManualColors(std::string modelName, bool useColor)
 {
     cMesh* meshToBeScaled = g_pFindMeshByFriendlyName(modelName);
 
@@ -479,7 +482,7 @@ float cControlGameEngine::IsLightOn(int lightId)
 
 //--------------------------------------Physics Controls---------------------------------------------------------------
 
-void  cControlGameEngine::MakePhysicsHappen()
+void  cControlGameEngine::ComparePhysicalAttributesWithOtherModels()
 {
     for (int physicalModelCount = 0; physicalModelCount < PhysicsModelList.size(); physicalModelCount++)
     {
@@ -495,14 +498,14 @@ void  cControlGameEngine::MakePhysicsHappen()
                         continue;
                     else
                     {
-                        if (PhysicsModelList[anotherModelCount]->physicsMeshType == "Plane")
+                        if (PhysicsModelList[anotherModelCount]->physicsMeshType == "Plane" || PhysicsModelList[anotherModelCount]->physicsMeshType == "Box")
                         {
-                            DoPhysics(spherePhysicalModel, PhysicsModelList[anotherModelCount]->modelName, PhysicsModelList[anotherModelCount]->physicsMeshType);
+                            MakePhysicsHappen(spherePhysicalModel, PhysicsModelList[anotherModelCount]->modelName, PhysicsModelList[anotherModelCount]->physicsMeshType);
                         } 
                         
                         else if (PhysicsModelList[anotherModelCount]->physicsMeshType == "Sphere")
                         {
-                            DoPhysics(spherePhysicalModel, PhysicsModelList[anotherModelCount]->modelName, PhysicsModelList[anotherModelCount]->physicsMeshType);
+                            MakePhysicsHappen(spherePhysicalModel, PhysicsModelList[anotherModelCount]->modelName, PhysicsModelList[anotherModelCount]->physicsMeshType);
                         }
                     }
                 }
@@ -512,32 +515,69 @@ void  cControlGameEngine::MakePhysicsHappen()
     }
 }
 
-void cControlGameEngine::DoPhysics(sPhysicsProperties* physicsModel, std::string model2Name, std::string collisionType)
+void cControlGameEngine::ResetPosition(sPhysicsProperties* physicsModel)
 {
-    //-----Calculate acceleration & velocity(Euler forward integration step)-----------
+    physicsModel->position.y = getRandomFloat(100.0, 150.0);
+    physicsModel->position.x = getRandomFloat(0.0, 20.0);
+    physicsModel->position.z = getRandomFloat(0.0, 20.0);;
+    physicsModel->sphereProps->velocity = glm::vec3(0.0f, -getRandomFloat(1.0, 5.0), 0.0f);
 
-    float dampingFactor = 1.0f;
-   
-    glm::vec3 velocityChange = physicsModel->sphereProps->acceleration * (float)deltaTime;
+    ChangeColor(physicsModel->modelName, 1.0, 1.0, 1.0); //Reseting spheres to white again
+}
 
-    physicsModel->sphereProps->velocity *= dampingFactor;
+void cControlGameEngine::AnimateTheCubes()
+{
+    std::vector <sPhysicsProperties*> boxModelList;
 
-    physicsModel->sphereProps->velocity += velocityChange;
+    int checkerValue = 0;
+    float offsetValue = 0.03;
 
-    glm::vec3 positionChange = physicsModel->sphereProps->velocity * (float)deltaTime;
+    if(animationReversed)
+        checkerValue = 1;
 
-    physicsModel->position.x += positionChange.x;
-    physicsModel->position.y += positionChange.y;
-    physicsModel->position.z += positionChange.z;
+    for (int physicalModelCount = 0; physicalModelCount < PhysicsModelList.size(); physicalModelCount++)
+    {
+        if (PhysicsModelList[physicalModelCount]->physicsMeshType == "Box")
+            boxModelList.push_back(PhysicsModelList[physicalModelCount]);
+    }
 
-    //----------------Change it later----------------------------
+    for (int boxModelCount = 0; boxModelCount < boxModelList.size(); boxModelCount++)
+    {
+        if (boxModelCount % 2 == checkerValue)
+        {
+            ChangeModelPhysicsPosition(boxModelList[boxModelCount]->modelName, boxModelList[boxModelCount]->position.x + offsetValue,
+                boxModelList[boxModelCount]->position.y, boxModelList[boxModelCount]->position.z);
+
+            MoveModel(boxModelList[boxModelCount]->modelName, boxModelList[boxModelCount]->position.x + offsetValue,
+                boxModelList[boxModelCount]->position.y, boxModelList[boxModelCount]->position.z);
+        }
+        else
+        {
+            ChangeModelPhysicsPosition(boxModelList[boxModelCount]->modelName, boxModelList[boxModelCount]->position.x - offsetValue,
+                boxModelList[boxModelCount]->position.y, boxModelList[boxModelCount]->position.z);
+
+            MoveModel(boxModelList[boxModelCount]->modelName, boxModelList[boxModelCount]->position.x - offsetValue,
+                boxModelList[boxModelCount]->position.y, boxModelList[boxModelCount]->position.z);
+        }
+    }
+
+    if (boxModelList[0]->position.x >= 50.0f)
+        animationReversed = true;
+    else if(boxModelList[1]->position.x >= 50.0f)
+        animationReversed = false;
+}
+
+void cControlGameEngine::MakePhysicsHappen(sPhysicsProperties* physicsModel, std::string model2Name, std::string collisionType)
+{
+    //-----Calculate acceleration & velocity(Euler forward integration step)---------------
+    
+    mPhysicsManager->EulerForwardIntegration(physicsModel, deltaTime);
+    glm::vec3 acc = physicsModel->sphereProps->acceleration;
+    //----------------Reset model position once it reaches threshold-----------------------
     
     if (physicsModel->position.y < -200)
     {
-        physicsModel->position.y = getRandomFloat(30.0, 50.0);
-        physicsModel->position.x = 0.0;
-        physicsModel->position.z = 0.0;
-        physicsModel->sphereProps->velocity = glm::vec3(0.0f, -getRandomFloat(1.0, 5.0), 0.0f);
+        ResetPosition(physicsModel);
     }
 
     //---------------------Set sphere's position based on new velocity--------------------
@@ -556,107 +596,44 @@ void cControlGameEngine::DoPhysics(sPhysicsProperties* physicsModel, std::string
     {*/
     //}
 
-    if (collisionType == "Plane")
+    if (collisionType == "Plane" || collisionType == "Box")
     {
-        //---------------------Get second model's position--------------------------------------------
+        //---------------------Get second mesh's model----------------------------------------------
 
         cMesh* model2Mesh = g_pFindMeshByFriendlyName(model2Name);
 
         sModelDrawInfo* modelInfo = g_pFindModelInfoByFriendlyName(model2Name);
 
         //------------------------Plane Collision Check---------------------------------------------
+        
+        if(model2Mesh != NULL && modelInfo!= NULL)
+            result = mPhysicsManager->CheckForPlaneCollision(modelInfo, model2Mesh, physicsModel);
 
-        result = mPhysicsManager->CheckForPlaneCollision(mVAOManager, modelInfo->friendlyName, modelInfo, model2Mesh, physicsModel);
-
-        if (result == true)
-            planeCollisionResponse(physicsModel);
+        if (result)
+            mPhysicsManager->PlaneCollisionResponse(physicsModel, model2Mesh);
     }
 
     else if (collisionType == "Sphere")
     {
-        //---------------------Get second model's position--------------------------------------------
+        //---------------------Get second sphere's physical model-----------------------------------
 
         sPhysicsProperties * secondSphereModel = FindPhysicalModelByName(model2Name);
 
-        //----------------------Sphere Collision Check---------------------------------------------
-
-        result = mPhysicsManager->CheckForSphereCollision(physicsModel, secondSphereModel);
+        //----------------------Sphere Collision Check----------------------------------------------
+        
+        if (secondSphereModel != NULL)
+            result = mPhysicsManager->CheckForSphereCollision(physicsModel, secondSphereModel);
 
         if (result)
-            sphereCollisionResponse(physicsModel, secondSphereModel);
-    }
-}
-
-void cControlGameEngine::planeCollisionResponse(sPhysicsProperties* physicsModel)
-{
-        glm::vec3 sphereDirection = physicsModel->sphereProps->velocity;
-        sphereDirection = glm::normalize(sphereDirection);
-
-        glm::vec3 edgeA = physicsModel->sphereProps->closestTriangleVertices[1] - physicsModel->sphereProps->closestTriangleVertices[0];
-        glm::vec3 edgeB = physicsModel->sphereProps->closestTriangleVertices[2] - physicsModel->sphereProps->closestTriangleVertices[0];
-
-        glm::vec3 triNormal = glm::normalize(glm::cross(edgeA, edgeB));
-
-        glm::vec3 reflectionVector = glm::reflect(sphereDirection, triNormal);
-
-        float sphereSpeed = glm::length(physicsModel->sphereProps->velocity);
-
-        glm::vec3 newVelocity = reflectionVector * sphereSpeed;
-
-        physicsModel->sphereProps->velocity = newVelocity;
-
-        //std::cout << "Hit!!" << std::endl;
-
-        //----------------Find Centroid of triangle-------------------------
-
-        //float triCentreX = (closestTriangleVertices[0].x + closestTriangleVertices[1].x + closestTriangleVertices[2].x) / 3;
-        //float triCentreY = (closestTriangleVertices[0].y + closestTriangleVertices[1].y + closestTriangleVertices[2].y) / 3;
-        //float triCentreZ = (closestTriangleVertices[0].z + closestTriangleVertices[1].z + closestTriangleVertices[2].z) / 3;
-
-        //spherePhysicalProps->collisionPoint.x = triCentreX;
-        //spherePhysicalProps->collisionPoint.y = triCentreY;
-        //spherePhysicalProps->collisionPoint.z = triCentreZ;
-}
-
-void cControlGameEngine::sphereCollisionResponse(sPhysicsProperties* firstSphereModel, sPhysicsProperties* secondSphereModel)
-{
-    glm::vec3 normals = normalize(secondSphereModel->position - firstSphereModel->position); // Finding the perpendicular normal
-
-    glm::vec3 relativeVelocity = secondSphereModel->sphereProps->velocity - firstSphereModel->sphereProps->velocity; // Difference in velocities between two spheres
-
-    float relativeSpeed = glm::dot(relativeVelocity, normals); // Magnitude of relative velocity vector
-
-    if (relativeSpeed < 0)
-    {
-        float impulse = (2 * relativeSpeed) / (firstSphereModel->sphereProps->inverse_mass + secondSphereModel->sphereProps->inverse_mass); // Change in momentum(vector quantity) 
-
-        //impulse *= (float)deltaTime;
-
-        firstSphereModel->sphereProps->velocity += (impulse * (firstSphereModel->sphereProps->inverse_mass) * normals); 
-        secondSphereModel->sphereProps->velocity -= (impulse * (secondSphereModel->sphereProps->inverse_mass) * normals);
-
-        //--------------------------------------Moving the spheres out of collision-------------------------------------------------------------
-
-        // Overlap that has happened during collision
-        float collisionOverlap = firstSphereModel->sphereProps->radius + secondSphereModel->sphereProps->radius - glm::distance(firstSphereModel->position, secondSphereModel->position); 
-
-        //overlap *= (float)deltaTime;
-
-        if (collisionOverlap > 0)
         {
-            firstSphereModel->position -= collisionOverlap / 2.0f * normals;
-            secondSphereModel->position += collisionOverlap / 2.0f * normals;
+            mPhysicsManager->SphereCollisionResponse(physicsModel, secondSphereModel);
+
+            //------------------------Change colors after collision-----------------------------
+
+            ChangeColor(physicsModel->modelName, getRandomFloat(0.0, 0.50), getRandomFloat(0.0, 0.50), getRandomFloat(0.0, 0.50));
+            ChangeColor(secondSphereModel->modelName, getRandomFloat(0.0, 0.50), getRandomFloat(0.0, 0.50), getRandomFloat(0.0, 0.50));
         }
     }
-}
-
-void cControlGameEngine::ChangeModelPhysicsPosition(std::string modelName, float newPositionX, float newPositionY, float newPositionZ)
-{
-    sPhysicsProperties* physicalModelFound = FindPhysicalModelByName(modelName);
-
-    physicalModelFound->position.x = newPositionX;
-    physicalModelFound->position.y = newPositionY;
-    physicalModelFound->position.z = newPositionZ;
 }
 
 void cControlGameEngine::AddSpherePhysicsToMesh(std::string modelName, std::string physicsMeshType, float objectRadius)
@@ -695,6 +672,15 @@ void cControlGameEngine::AddPlanePhysicsToMesh(std::string modelName, std::strin
     PhysicsModelList.push_back(newPhysicsModel);
 }
 
+void cControlGameEngine::ChangeModelPhysicsPosition(std::string modelName, float newPositionX, float newPositionY, float newPositionZ)
+{
+    sPhysicsProperties* physicalModelFound = FindPhysicalModelByName(modelName);
+
+    physicalModelFound->position.x = newPositionX;
+    physicalModelFound->position.y = newPositionY;
+    physicalModelFound->position.z = newPositionZ;
+}
+
 void cControlGameEngine::ChangeModelPhysicsVelocity(std::string modelName, glm::vec3 velocityChange)
 {
     sPhysicsProperties* physicalModelFound = FindPhysicalModelByName(modelName);
@@ -707,6 +693,19 @@ void cControlGameEngine::ChangeModelPhysicsAcceleration(std::string modelName, g
     sPhysicsProperties* physicalModelFound = FindPhysicalModelByName(modelName);
 
     physicalModelFound->sphereProps->acceleration = accelerationChange;
+}
+
+int cControlGameEngine::ChangeModelPhysicalMass(std::string modelName, float mass)
+{
+    sPhysicsProperties* physicalModelFound = FindPhysicalModelByName(modelName);
+
+    if (mass > 0.0f)
+    {
+        physicalModelFound->sphereProps->inverse_mass = 1.0 / mass;
+        return 0;
+    }
+    
+    return 1;
 }
 
 //--------------------------------------Engine Controls-----------------------------------------------------------------

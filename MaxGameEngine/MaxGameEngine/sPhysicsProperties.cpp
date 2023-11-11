@@ -21,5 +21,5 @@ sSpherePhysicsProperties::sSpherePhysicsProperties()
 
     this->velocity = glm::vec3(0.0f);
     this->acceleration = glm::vec3(0.0f);
-    this->inverse_mass = 1.0f / 50.0f;
+    this->inverse_mass = 1.0 / 10.0;
 }

@@ -1,2 +1,5 @@
 ﻿  cControlGameEngine.cpp
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cControlGameEngine.cpp(332,46): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cControlGameEngine.cpp(533,23): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\MaxGameEngine\cControlGameEngine.cpp(704,61): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   MaxGameEngine.vcxproj -> C:\Users\maxim\Git_Files\Engines\MaxGameEngine\MaxGameEngine\x64\Release\MaxGameEngine.lib

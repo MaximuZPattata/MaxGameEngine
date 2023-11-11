@@ -14,6 +14,8 @@ private:
     int meshListIndex = 0;
     int lightListIndex = 0;
 
+    bool animationReversed = false;
+
     glm::vec3 cameraEye = glm::vec3(0.0, 0.0f, 0.0f);
     glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -57,6 +59,10 @@ public:
     bool mouseMoved = true;
     bool enableMouseMovement = false;
 
+    //-------------------Common Functions--------------------------------------------------
+
+    float getRandomFloat(float num1, float num2);
+
     //-------------------Camera Controls---------------------------------------------------
 
     void MoveCameraPosition(float translate_x, float translate_y, float translate_z);
@@ -71,7 +77,7 @@ public:
 
     void ChangeColor(std::string modelName, float r, float g, float b);
 
-    void UseDifferentColors(std::string modelName, bool useColor);
+    void UseManualColors(std::string modelName, bool useColor);
 
     void ScaleModel(std::string modelModel, float scale_value);
 
@@ -139,9 +145,9 @@ public:
 
     //------------------Physics Controls---------------------------------------------------
 
-    void MakePhysicsHappen();
+    void ComparePhysicalAttributesWithOtherModels();
 
-    void DoPhysics(sPhysicsProperties* physicsModel, std::string Model2, std::string collisionType);
+    void MakePhysicsHappen(sPhysicsProperties* physicsModel, std::string Model2, std::string collisionType);
 
     void ChangeModelPhysicsPosition(std::string modelName, float newPositionX, float newPositionY, float newPositionZ);
 
@@ -153,9 +159,11 @@ public:
 
     void ChangeModelPhysicsAcceleration(std::string modelName, glm::vec3 accelerationChange);
 
-    void planeCollisionResponse(sPhysicsProperties* physicsModel);
+    int ChangeModelPhysicalMass(std::string modelName, float mass);
 
-    void sphereCollisionResponse(sPhysicsProperties* sphere1PhysicsModel, sPhysicsProperties* sphere2PhysicsModel);
+    void ResetPosition(sPhysicsProperties* physicsModel);
+
+    void AnimateTheCubes();
 
     //-------------------Engine Controls---------------------------------------------------
 
